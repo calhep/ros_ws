@@ -131,6 +131,15 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/fizzer/ros_ws/build/gtest/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/adeept_awr/adeept_awr/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/adeept_awr/adeept_awr_description/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/enph353/enph353/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/enph353/enph353_npcs/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/enph353/enph353_utils/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/adeept_awr_ros_driver/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/mcqueen_controller/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/adeept_awr/adeept_awr_gazebo/cmake_install.cmake")
+  include("/home/fizzer/ros_ws/build/2020T1_competition/enph353/enph353_gazebo/cmake_install.cmake")
 
 endif()
 
