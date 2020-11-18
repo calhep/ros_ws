@@ -75,17 +75,18 @@ def main(args):
     start_time = rospy.get_time()
 
     rm.move_robot(x=0.15)
-    init_rate.sleep()
-    init_rate.sleep()
-    init_rate.sleep()
+    rospy.sleep(2.7)
     rm.move_robot(x=0,z=0.85)
-    init_rate.sleep()
-    init_rate.sleep()
+    rospy.sleep(1.7)
 
-    while rospy.get_time() < start_time + 20:
+    while rospy.get_time() < start_time + 240:
         
-        rm.move_robot(x=0.1, z=0)
-        init_rate.sleep()
+        rospy.sleep(0.5)
+        rm.move_robot(x=0.2, z=0)
+        rospy.sleep(3)
+        rm.move_robot(x=-0.2, z=0)
+        rospy.sleep(3)
+        rm.move_robot()
 
     rm.stop_robot()
     pr.stop_comp()
