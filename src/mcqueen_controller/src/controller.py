@@ -31,21 +31,57 @@ class robot_movement:
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
-    def move_robot(self):
+    def move_robot(self, x=0, y=0, z=0):
         move = Twist()
-        move.linear.x = 0.1
+        move.linear.x = x
+        move.linear.y = y
+        move.angular.z = z
 
+        print(x)
         self.move_pub.publish(move)
+
+    def stop_robot(self):
+        self.move_robot()
+
+class robot_timer:
+
+    def __init__(self):
+        self.timer_sub = rospy.Subscriber('/clock', String, queue_size=1)
+
+class plate_reader:
+
+    def __init__(self):
+        self.plate_pub = rospy.Publisher('/license_plate', String, queue_size=1)
+        self.start_string = '12345678,mcqueen,0,ABCD'
+        self.stop_string = '12345678,mcqueen,-1,ABCD'
+
+    def begin_comp(self):
+        self.plate_pub.publish(self.start_string)
+
+    def stop_comp(self):
+        self.plate_pub.publish(self.stop_string)
 
 def main(args):
     rm = robot_movement()
+    # rt = robot_timer()
+    pr = plate_reader()
+
     rospy.init_node('controller')
     rate = rospy.Rate(2)
-    
-    while not rospy.is_shutdown():
-        rm.move_robot()
-        rate.sleep()
 
+    rate.sleep()
+    pr.begin_comp()
 
+    while True:
+        try:
+            print('sayhbdw')
+            rm.move_robot(x=0.1)
+            rate.sleep()
+        except KeyboardInterrupt:
+            rm.stop_robot()
+            pr.stop_comp()
+            print('guh')
+            break
+        
 if __name__ == '__main__':
     main(sys.argv)
