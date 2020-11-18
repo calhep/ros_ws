@@ -67,26 +67,16 @@ def main(args):
 
     rospy.init_node('controller')
     init_rate = rospy.Rate(1)
-    turn_rate = rospy.Rate(2)
 
     init_rate.sleep()
     pr.begin_comp()
 
-    start_time = rospy.get_time()
-
     rm.move_robot(x=0.15)
     rospy.sleep(2.7)
     rm.move_robot(x=0,z=0.85)
-    rospy.sleep(1.7)
-
-    while rospy.get_time() < start_time + 240:
-        
-        rospy.sleep(0.5)
-        rm.move_robot(x=0.2, z=0)
-        rospy.sleep(3)
-        rm.move_robot(x=-0.2, z=0)
-        rospy.sleep(3)
-        rm.move_robot()
+    rospy.sleep(2.2)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(6)
 
     rm.stop_robot()
     pr.stop_comp()
