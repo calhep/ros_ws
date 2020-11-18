@@ -66,23 +66,31 @@ def main(args):
     pr = plate_reader()
 
     rospy.init_node('controller')
-    rate = rospy.Rate(2)
+    init_rate = rospy.Rate(1)
+    turn_rate = rospy.Rate(2)
 
-    rate.sleep()
+    init_rate.sleep()
     pr.begin_comp()
 
     start_time = rospy.get_time()
 
+    rm.move_robot(x=0.15)
+    init_rate.sleep()
+    init_rate.sleep()
+    init_rate.sleep()
+    rm.move_robot(x=0,z=0.85)
+    init_rate.sleep()
+    init_rate.sleep()
 
-    while rospy.get_time() < start_time + 15:
+    while rospy.get_time() < start_time + 20:
         
-        rm.move_robot(x=0, z=0.2)
-        rate.sleep()
+        rm.move_robot(x=0.1, z=0)
+        init_rate.sleep()
 
     rm.stop_robot()
     pr.stop_comp()
 
-    rate.sleep()
+    init_rate.sleep()
 
 if __name__ == '__main__':
     main(sys.argv)
