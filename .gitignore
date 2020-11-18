@@ -1,1 +1,3 @@
 src/2020T1_competition/
+build/*
+devel/*

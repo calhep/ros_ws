@@ -37,7 +37,6 @@ class robot_movement:
         move.linear.y = y
         move.angular.z = z
 
-        print(x)
         self.move_pub.publish(move)
 
     def stop_robot(self):
@@ -74,16 +73,16 @@ def main(args):
 
     start_time = rospy.get_time()
 
-    while True:
+
+    while rospy.get_time() < start_time + 15:
         
-        print('sayhbdw')
         rm.move_robot(x=0, z=0.2)
         rate.sleep()
-        
-        if rospy.get_time() >= start_time + 15:
-            rm.stop_robot()
-            pr.stop_comp()
-            
-        
+
+    rm.stop_robot()
+    pr.stop_comp()
+
+    rate.sleep()
+
 if __name__ == '__main__':
     main(sys.argv)
