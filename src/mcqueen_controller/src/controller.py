@@ -37,7 +37,6 @@ class robot_movement:
         move.linear.y = y
         move.angular.z = z
 
-        print(x)
         self.move_pub.publish(move)
 
     def stop_robot(self):
@@ -46,7 +45,10 @@ class robot_movement:
 class robot_timer:
 
     def __init__(self):
-        self.timer_sub = rospy.Subscriber('/clock', String, queue_size=1)
+        self.timer_sub = rospy.Subscriber('/clock', String, self.clock_callback)
+    
+    def clock_callback(self, data):
+        print('data.data')
 
 class plate_reader:
 
@@ -67,7 +69,7 @@ def main(args):
     pr = plate_reader()
 
     rospy.init_node('controller')
-    rate = rospy.Rate(2)
+    rate = rospy.Rate(1)
 
     rate.sleep()
     pr.begin_comp()
@@ -75,7 +77,7 @@ def main(args):
     while True:
         try:
             print('sayhbdw')
-            rm.move_robot(x=0.1)
+            rm.move_robot(x=-0.1)
             rate.sleep()
         except KeyboardInterrupt:
             rm.stop_robot()
