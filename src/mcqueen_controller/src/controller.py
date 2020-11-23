@@ -36,8 +36,7 @@ class image_converter:
                 return x
         
         v_func = np.vectorize(f)
-        print(cv_image)
-        threshed_image = v_func(cv_image)
+        threshed_image = np.float32(v_func(cv_image))
         
         display_image = self.mask_frame(threshed_image, self.threshold, self.intensity, cv2.THRESH_BINARY_INV)
         # center_of_mass = self.generate_com(masked_image[-100:])
