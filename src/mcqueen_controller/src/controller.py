@@ -19,6 +19,8 @@ class image_converter:
     THRESHOLD = 88
     INTENSITY = 255
 
+    ### TODO: Reevaluated whether we will need the CoM functions
+
     def __init__(self, rm):
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image,self.callback)
@@ -66,7 +68,7 @@ class image_converter:
 
 
 class robot_movement:
-
+    ### TODO: implement hardcoded robot movement commands in this class.
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
@@ -81,7 +83,7 @@ class robot_movement:
     def stop_robot(self):
         self.move_robot()
 
-    def move_to_com(self, com):
+    def move_to_com(self, com): ### TODO: remove this, you won't need it anymore
         print(com)
         if com[1] <= 200:
             self.move_robot(x=0.2)
@@ -113,7 +115,6 @@ class plate_reader:
 
 def main(args):
     rm = robot_movement()
-    # rt = robot_timer()
     pr = plate_reader()
 
     rospy.init_node('controller')
@@ -122,57 +123,38 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
 
+    ### TODO: move these movement commands into the robot_movement class
     # turn left onto main road go straight till corner
     rm.move_robot(x=0.15)
     rospy.sleep(2.7)
     rm.move_robot(x=0,z=0.85)
     rospy.sleep(2.2)
-    rm.stop_robot()
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(6)
 
-    ic = image_converter(rm)
-    rospy.sleep(30)
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.15)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.25)
 
-    # rm.move_robot(x=0, z=0.85)
-    # rospy.sleep(1.08)
-    # rm.stop_robot()
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.2)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.25)
 
-    # rospy.sleep(5)
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.21)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.45)
 
-    # rm.move_robot(x=0, z=-0.85)
-    # rospy.sleep(1.08)
-    # rm.stop_robot()
-
-    # # turn left onto main road go straight till corner
-    # rm.move_robot(x=0.15)
-    # rospy.sleep(2.7)
-    # rm.move_robot(x=0,z=0.85)
-    # rospy.sleep(2.2)
-    # rm.move_robot(x=0.2, z=0)
-    # rospy.sleep(6)
-
-    # #turn left go straight
-    # rm.move_robot(x=0, z=0.85)
-    # rospy.sleep(2.15)
-    # rm.move_robot(x=0.2, z=0)
-    # rospy.sleep(12.25)
-
-    # #turn left go straight
-    # rm.move_robot(x=0, z=0.85)
-    # rospy.sleep(2.2)
-    # rm.move_robot(x=0.2, z=0)
-    # rospy.sleep(12.25)
-
-    # #turn left go straight
-    # rm.move_robot(x=0, z=0.85)
-    # rospy.sleep(2.21)
-    # rm.move_robot(x=0.2, z=0)
-    # rospy.sleep(12.45)
-
-    # #turn left go straight
-    # rm.move_robot(x=0, z=0.85)
-    # rospy.sleep(2.22)
-    # rm.move_robot(x=0.2, z=0)
-    # rospy.sleep(12.45)
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.22)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.45)
 
     rm.stop_robot()
     pr.stop_comp()
