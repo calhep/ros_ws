@@ -14,14 +14,14 @@ from cv_bridge import CvBridge, CvBridgeError
 from scipy.ndimage import center_of_mass
 from math import isnan
 
-class image_converter:
+class image_converter():
 
     def __init__(self):
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image,self.callback)
         self.threshold = 88
         self.intensity = 255
-        self.prev_com = (160, 120)
+        self.prev_com = (640, 360)
     
     def callback(self, image):
         try:
@@ -39,7 +39,9 @@ class image_converter:
         threshed_image = np.float32(v_func(cv_image))
         
         display_image = self.mask_frame(threshed_image, self.threshold, self.intensity, cv2.THRESH_BINARY_INV)
-        # center_of_mass = self.generate_com(masked_image[-100:])
+        center_of_mass = self.generate_com(threshed_image[-250:])
+
+        self.move_to_com(center_of_mass)
 
         cv2.imshow("Image window", display_image)
         cv2.waitKey(3)
@@ -59,6 +61,16 @@ class image_converter:
             self.prev_com = com_loc
 
         return com_loc
+    
+    def move_to_com(self, com):
+        if com[1] <= 430:
+            robot_movement.move_robot(self,x=0.5)
+        else:
+            robot_movement.move_robot(self,x=0.5)
+            if com[0] >= 800:
+                robot_movement.move_robot(self,x=0.5, z=-1)
+            elif com[0] <= 480:
+                robot_movement.move_robot(self,x=0.5, z=1)
 
 
 class robot_movement:
@@ -76,6 +88,7 @@ class robot_movement:
 
     def stop_robot(self):
         self.move_robot()
+
 
 class robot_timer:
 
@@ -107,15 +120,15 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
 
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(1.08)
-    rm.stop_robot()
+    # rm.move_robot(x=0, z=0.85)
+    # rospy.sleep(1.08)
+    # rm.stop_robot()
 
-    rospy.sleep(5)
+    # rospy.sleep(5)
 
-    rm.move_robot(x=0, z=-0.85)
-    rospy.sleep(1.08)
-    rm.stop_robot()
+    # rm.move_robot(x=0, z=-0.85)
+    # rospy.sleep(1.08)
+    # rm.stop_robot()
 
     # # turn left onto main road go straight till corner
     # rm.move_robot(x=0.15)
