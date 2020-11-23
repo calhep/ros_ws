@@ -11,6 +11,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from scipy.ndimage import center_of_mass
+from math import isnan
 
 class image_converter:
 
@@ -27,14 +28,15 @@ class image_converter:
         except CvBridgeError as e:
             print(e)
         
-        masked_image = self.mask_frame(cv_image)
-        center_of_mass = self.generate_com(masked_image[-100])
+        display_image = self.mask_frame(cv_image, self.intensity)
+        masked_image = self.mask_frame(cv_image, 1)
+        center_of_mass = self.generate_com(masked_image[-100:])
 
-        cv2.imshow("Image window", masked_image)
+        cv2.imshow("Image window", display_image)
         cv2.waitKey(3)
 
-    def mask_frame(self, image):
-        _, masked_frame = cv2.threshold(image, self.threshold, self.intensity, cv2.THRESH_BINARY_INV)
+    def mask_frame(self, image, intensity):
+        _, masked_frame = cv2.threshold(image, self.threshold, intensity, cv2.THRESH_BINARY_INV)
         
         return masked_frame
 
@@ -42,13 +44,12 @@ class image_converter:
         com = center_of_mass(image)
 
         if isnan(com[0]) or isnan(com[1]):
-            com_loc = prev_com
+            com_loc = self.prev_com
         else:
             com_loc = (int(com[1]), int(com[0]) + 140)
             self.prev_com = com_loc
 
         return com_loc
-
 
 
 class robot_movement:
