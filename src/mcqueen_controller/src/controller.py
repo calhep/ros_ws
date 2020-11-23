@@ -71,12 +71,37 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
 
+    # turn left onto main road go straight till corner
     rm.move_robot(x=0.15)
     rospy.sleep(2.7)
     rm.move_robot(x=0,z=0.85)
     rospy.sleep(2.2)
     rm.move_robot(x=0.2, z=0)
     rospy.sleep(6)
+
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.15)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.25)
+
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.2)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.25)
+
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.21)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.45)
+
+    #turn left go straight
+    rm.move_robot(x=0, z=0.85)
+    rospy.sleep(2.22)
+    rm.move_robot(x=0.2, z=0)
+    rospy.sleep(12.45)
 
     rm.stop_robot()
     pr.stop_comp()
