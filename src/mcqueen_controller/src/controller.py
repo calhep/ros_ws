@@ -11,20 +11,31 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
-# class image_converter:
+class image_converter:
 
-#     def __init__(self):
-#         self.bridge = CvBridge()
-#         self.image_sub = rospy.Subscriber('/robot/camera1/image_raw',Image,self.callback)
+    def __init__(self):
+        self.bridge = CvBridge()
+        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image,self.callback)
+        self.threshold = 88
+        self.intensity = 255
     
-#     def callback(self, image):
-#         try:
-#             cv_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
-#         except CvBridgeError as e:
-#             print(e)
+    def callback(self, image):
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
+        except CvBridgeError as e:
+            print(e)
+        
+        masked_image = self.mask_frame(cv_image)
 
-#         cv2.imshow("Image window", cv_image)
-#         cv2.waitKey(3)
+        cv2.imshow("Image window", masked_image)
+        cv2.waitKey(3)
+
+    def mask_frame(self, image):
+
+        _, masked_frame = cv2.threshold(image, self.threshold, self.intensity, cv2.THRESH_BINARY_INV)
+        
+        return masked_frame
+
 
 class robot_movement:
 
@@ -64,6 +75,7 @@ def main(args):
     rm = robot_movement()
     # rt = robot_timer()
     pr = plate_reader()
+    ic = image_converter()
 
     rospy.init_node('controller')
     init_rate = rospy.Rate(1)
@@ -71,14 +83,15 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
 
-    rm.move_robot(x=0.15)
-    rospy.sleep(2.7)
-    rm.move_robot(x=0,z=0.85)
-    rospy.sleep(2.2)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(6)
+    # rm.move_robot(x=0.15)
+    # rospy.sleep(2.7)
+    # rm.move_robot(x=0,z=0.85)
+    # rospy.sleep(2.2)
+    # rm.move_robot(x=0.2, z=0)
+    # rospy.sleep(6)
+    rospy.sleep(10)
 
-    rm.stop_robot()
+    # rm.stop_robot()
     pr.stop_comp()
 
     init_rate.sleep()
