@@ -6,6 +6,7 @@ roslib.load_manifest('mcqueen_controller')
 import rospy
 import sys
 import cv2
+import numpy as np
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
@@ -27,16 +28,25 @@ class image_converter:
             cv_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
         except CvBridgeError as e:
             print(e)
+
+        def f(x):
+            if x < 80:
+                return 255
+            else:
+                return x
         
-        display_image = self.mask_frame(cv_image, self.intensity)
-        masked_image = self.mask_frame(cv_image, 1)
-        center_of_mass = self.generate_com(masked_image[-100:])
+        v_func = np.vectorize(f)
+        print(cv_image)
+        threshed_image = v_func(cv_image)
+        
+        display_image = self.mask_frame(threshed_image, self.threshold, self.intensity, cv2.THRESH_BINARY_INV)
+        # center_of_mass = self.generate_com(masked_image[-100:])
 
         cv2.imshow("Image window", display_image)
         cv2.waitKey(3)
 
-    def mask_frame(self, image, intensity):
-        _, masked_frame = cv2.threshold(image, self.threshold, intensity, cv2.THRESH_BINARY_INV)
+    def mask_frame(self, image, threshold, intensity, mask_type):
+        _, masked_frame = cv2.threshold(image, threshold, intensity, mask_type)
         
         return masked_frame
 
@@ -66,7 +76,7 @@ class robot_movement:
         self.move_pub.publish(move)
 
     def stop_robot(self):
-        self.move_robot(x=0,y=0,z=0)
+        self.move_robot()
 
 class robot_timer:
 
@@ -98,37 +108,47 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
 
-    # turn left onto main road go straight till corner
-    rm.move_robot(x=0.15)
-    rospy.sleep(2.7)
-    rm.move_robot(x=0,z=0.85)
-    rospy.sleep(2.2)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(6)
-
-    #turn left go straight
     rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.15)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.25)
+    rospy.sleep(1.08)
+    rm.stop_robot()
 
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.2)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.25)
+    rospy.sleep(5)
 
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.21)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.45)
+    rm.move_robot(x=0, z=-0.85)
+    rospy.sleep(1.08)
+    rm.stop_robot()
 
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.22)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.45)
+    # # turn left onto main road go straight till corner
+    # rm.move_robot(x=0.15)
+    # rospy.sleep(2.7)
+    # rm.move_robot(x=0,z=0.85)
+    # rospy.sleep(2.2)
+    # rm.move_robot(x=0.2, z=0)
+    # rospy.sleep(6)
+
+    # #turn left go straight
+    # rm.move_robot(x=0, z=0.85)
+    # rospy.sleep(2.15)
+    # rm.move_robot(x=0.2, z=0)
+    # rospy.sleep(12.25)
+
+    # #turn left go straight
+    # rm.move_robot(x=0, z=0.85)
+    # rospy.sleep(2.2)
+    # rm.move_robot(x=0.2, z=0)
+    # rospy.sleep(12.25)
+
+    # #turn left go straight
+    # rm.move_robot(x=0, z=0.85)
+    # rospy.sleep(2.21)
+    # rm.move_robot(x=0.2, z=0)
+    # rospy.sleep(12.45)
+
+    # #turn left go straight
+    # rm.move_robot(x=0, z=0.85)
+    # rospy.sleep(2.22)
+    # rm.move_robot(x=0.2, z=0)
+    # rospy.sleep(12.45)
 
     rm.stop_robot()
     pr.stop_comp()
