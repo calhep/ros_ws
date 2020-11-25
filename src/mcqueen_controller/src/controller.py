@@ -38,23 +38,31 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
+        # Threshold a vertical slice of the camera feed on the right side
         img = camera_img[:,900:] # 640 for half the cam img
         _, threshed_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY) 
 
+        # Compute center of mass of the threshed image
         my_com = self.generate_com(threshed_img)
+        x = my_com[0]
+        y = my_com[1]
         print(my_com)
 
-        displayed_img = cv2.circle(img, my_com, 50, (255,0,0))
-        
+        displayed_img = cv2.circle(threshed_img, my_com, 50, (255,0,0))
         cv2.imshow('guh', displayed_img)
         cv2.waitKey(3)
-       
 
-    def mask_frame(self, image, threshold, intensity, mask_type):
-        _, masked_frame = cv2.threshold(image, threshold, intensity, mask_type)
-        
-        return masked_frame
+        # Control conditions
+        if x < 125:
+            self.rm.move_robot(x=0.05, z=0.6)
+        elif 125 <= x and x <= 255:
+            self.rm.move_robot(x=0.1, z=0)
+        else:
+            self.rm.move_robot(x=0.05, z=-0.6)
 
+
+    # Returns center of mass of a threshed image as a tuple,
+    # with the x coordinate in the 0th index and y coordinate in the 1st index
     def generate_com(self, image):
         com = center_of_mass(image)
 
@@ -89,6 +97,13 @@ class RobotMovement:
 
     def stop_robot(self):
         self.move_robot()
+
+    def init(self):
+        self.move_robot(x=0.15)
+        rospy.sleep(2.7)
+        self.move_robot(x=0,z=0.85)
+        rospy.sleep(2.2)
+        self.stop_robot()
 
     # TODO: this gets us out of the starting fork for now.
     def drive(self):    
@@ -167,7 +182,6 @@ def main(args):
     # We can consider moving and instantiating all classes in a higher level control class.
     rm = RobotMovement()
     pr = PlateReader() 
-    ic = ImageConverter(rm)
 
     # Initialize the node.
     rospy.init_node('controller')
@@ -176,11 +190,11 @@ def main(args):
     # Begin the competition.
     init_rate.sleep()
     pr.begin_comp()
-
-    #drive(rm)
-    # rm.turn_left()
-    # rospy.sleep(5)
-    # rm.turn_right()
+    
+    # start movin bruh
+    rospy.sleep(2.5)
+    rm.init()
+    ic = ImageConverter(rm)
     
     rospy.sleep(45)
     # Stop the robot and the competition.
