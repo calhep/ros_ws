@@ -34,18 +34,18 @@ class ImageConverter:
     
     def callback(self, image):
         try:
-            camera_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
+            camera_img = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
         except CvBridgeError as e:
             print(e)
 
-        # Rectangular strip coordinates
-        corner_tl = (480, 520)
-        corner_br = (960, 520)
-        color = self.RED
+        img = camera_img[:,900:] # 640 for half the cam img
+        _, threshed_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY) 
 
-        img = cv2.rectangle(camera_image, corner_tl, corner_br, color, -1)
+        my_com = self.generate_com(threshed_img)
+        print(my_com)
+        displayed_img = cv2.circle(threshed_img, my_com, 50, (255,255,0))
         
-        cv2.imshow('guh', img)
+        cv2.imshow('guh', displayed_img)
         cv2.waitKey(3)
        
 
@@ -60,7 +60,7 @@ class ImageConverter:
         if isnan(com[0]) or isnan(com[1]):
             com_loc = self.prev_com
         else:
-            com_loc = (int(com[1]), int(com[0]) + 620)
+            com_loc = (int(com[1]), int(com[0]))
             self.prev_com = com_loc
 
         return com_loc
@@ -181,10 +181,10 @@ def main(args):
     # rospy.sleep(5)
     # rm.turn_right()
     
-    rospy.sleep(30)
+    rospy.sleep(45)
     # Stop the robot and the competition.
-    rm.stop_robot()
-    pr.stop_comp()
+    # rm.stop_robot()
+    # pr.stop_comp()
 
     init_rate.sleep()
 
