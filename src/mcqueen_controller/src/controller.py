@@ -22,8 +22,9 @@ class ImageConverter:
 
     THRESHOLD = 88
     INTENSITY = 255
-
-    ### TODO: Reevaluated whether we will need the CoM functions
+    CAMERA_LENGTH = 1280
+    CAMERA_HEIGHT = 720
+    RED = (255,0,0)
 
     def __init__(self, rm):
         self.bridge = CvBridge()
@@ -33,11 +34,19 @@ class ImageConverter:
     
     def callback(self, image):
         try:
-            cv_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
+            camera_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
         except CvBridgeError as e:
             print(e)
 
-        cv2.imshow('guh', cv_image)
+        # Rectangular strip coordinates
+        corner_tl = (480, 520)
+        corner_br = (960, 520)
+        color = self.RED
+
+        img = cv2.rectangle(camera_image, corner_tl, corner_br, color, -1)
+        
+        cv2.imshow('guh', img)
+        cv2.waitKey(3)
        
 
     def mask_frame(self, image, threshold, intensity, mask_type):
@@ -168,10 +177,11 @@ def main(args):
     pr.begin_comp()
 
     #drive(rm)
-    rm.turn_left()
-    rospy.sleep(5)
-    rm.turn_right()
+    # rm.turn_left()
+    # rospy.sleep(5)
+    # rm.turn_right()
     
+    rospy.sleep(30)
     # Stop the robot and the competition.
     rm.stop_robot()
     pr.stop_comp()
