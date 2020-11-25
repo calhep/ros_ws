@@ -43,7 +43,8 @@ class ImageConverter:
 
         my_com = self.generate_com(threshed_img)
         print(my_com)
-        displayed_img = cv2.circle(threshed_img, my_com, 50, (255,255,0))
+
+        displayed_img = cv2.circle(img, my_com, 50, (255,0,0))
         
         cv2.imshow('guh', displayed_img)
         cv2.waitKey(3)
