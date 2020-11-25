@@ -75,7 +75,7 @@ class RobotMovement:
     # e.g. the caller would only be able to use straight(), turn(), fork()
 
 
-    TURN_TIME = 2.2
+    TURN_TIME = 2.178
     TURN_SPD = 0.85
     
     def __init__(self):
@@ -101,12 +101,12 @@ class RobotMovement:
     # Drives the distance of the outer straight, then stops.
     def straight(self):
         self.move_robot(x=0.2)
-        rospy.sleep(12)
+        rospy.sleep(12.1)
         
     # Drives to where the fork in the straight is, then stops.
     def half(self):
         self.move_robot(x=0.2)
-        rospy.sleep(6)
+        rospy.sleep(6.05)
 
     # Turns 90 degrees left, then stop.
     def turn_left(self):
