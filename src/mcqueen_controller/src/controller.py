@@ -37,22 +37,8 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-        def f(x):
-            if x < 80:
-                return 255
-            else:
-                return x
-        
-        v_func = np.vectorize(f)
-        threshed_image = np.float32(v_func(cv_image))
-        
-        display_image = self.mask_frame(threshed_image, self.THRESHOLD,self.INTENSITY, cv2.THRESH_BINARY_INV)
-        center_of_mass = self.generate_com(display_image[-100:])
-
-        self.rm.move_to_com(center_of_mass)
-
-        cv2.imshow("Image window", cv2.circle(display_image, center_of_mass, 50, (0, 0, 255)))
-        cv2.waitKey(3)
+        cv2.imshow('guh', cv_image)
+       
 
     def mask_frame(self, image, threshold, intensity, mask_type):
         _, masked_frame = cv2.threshold(image, threshold, intensity, mask_type)
@@ -171,6 +157,7 @@ def main(args):
     # We can consider moving and instantiating all classes in a higher level control class.
     rm = RobotMovement()
     pr = PlateReader() 
+    ic = ImageConverter(rm)
 
     # Initialize the node.
     rospy.init_node('controller')
@@ -181,7 +168,9 @@ def main(args):
     pr.begin_comp()
 
     #drive(rm)
-
+    rm.turn_left()
+    rospy.sleep(5)
+    rm.turn_right()
     
     # Stop the robot and the competition.
     rm.stop_robot()
