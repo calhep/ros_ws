@@ -40,7 +40,7 @@ class ImageConverter:
 
         # Threshold a vertical slice of the camera feed on the right side
         img = camera_img[:,900:] # 640 for half the cam img
-        _, threshed_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY) 
+        _, threshed_img = cv2.threshold(img, 250, 255, cv2.THRESH_BINARY) 
 
         # Compute center of mass of the threshed image
         my_com = self.generate_com(threshed_img)
@@ -100,7 +100,7 @@ class RobotMovement:
 
     def init(self):
         self.move_robot(x=0.15)
-        rospy.sleep(2.7)
+        rospy.sleep(2.5)
         self.move_robot(x=0,z=0.85)
         rospy.sleep(2.2)
         self.stop_robot()
