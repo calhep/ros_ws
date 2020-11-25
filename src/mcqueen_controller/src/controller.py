@@ -14,7 +14,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from scipy.ndimage import center_of_mass
 from math import isnan
 
-class image_converter:
+class ImageConverter:
 
     THRESHOLD = 88
     INTENSITY = 255
@@ -67,7 +67,7 @@ class image_converter:
         return com_loc
 
 
-class robot_movement:
+class RobotMovement:
     ### TODO: implement hardcoded robot movement commands in this class.
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
@@ -94,13 +94,9 @@ class robot_movement:
             elif com[0] <= 440:
                 self.move_robot(x=0, z=0.7)
 
+class PlateReader:
 
-class robot_timer:
-
-    def __init__(self):
-        self.timer_sub = rospy.Subscriber('/clock', String, queue_size=1)
-
-class plate_reader:
+    ### TODO: Instantiate a Homography class in here, which will detect homographies and predict plates
 
     def __init__(self):
         self.plate_pub = rospy.Publisher('/license_plate', String, queue_size=1)
@@ -114,8 +110,10 @@ class plate_reader:
         self.plate_pub.publish(self.stop_string)
 
 def main(args):
-    rm = robot_movement()
-    pr = plate_reader()
+    # TODO: Is it good practice to "start" the competition from the PR class?
+    # We can consider moving and instantiating all classes in a higher level control class.
+    rm = RobotMovement()
+    pr = plate_reader() 
 
     rospy.init_node('controller')
     init_rate = rospy.Rate(1)
@@ -123,7 +121,7 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
 
-    ### TODO: move these movement commands into the robot_movement class
+    ### TODO: move these movement commands into the RobotMovement class
     # turn left onto main road go straight till corner
     rm.move_robot(x=0.15)
     rospy.sleep(2.7)
