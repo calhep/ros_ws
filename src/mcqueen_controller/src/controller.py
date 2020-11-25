@@ -6,35 +6,56 @@ roslib.load_manifest('mcqueen_controller')
 import rospy
 import sys
 import cv2
+import numpy as np
+
+import homography
+
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from scipy.ndimage import center_of_mass
+from math import isnan
 
-class image_converter:
 
-    def __init__(self):
+class ImageConverter:
+
+    THRESHOLD = 88
+    INTENSITY = 255
+
+    ### TODO: Reevaluated whether we will need the CoM functions
+
+    def __init__(self, rm):
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image,self.callback)
-        self.threshold = 88
-        self.intensity = 255
-        self.prev_com = (160, 120)
+        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw',Image,self.callback)
+        self.prev_com = (640, 360)
+        self.rm = rm
     
     def callback(self, image):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
         except CvBridgeError as e:
             print(e)
-        
-        masked_image = self.mask_frame(cv_image)
-        center_of_mass = self.generate_com(masked_image[-100])
 
-        cv2.imshow("Image window", masked_image)
+        def f(x):
+            if x < 80:
+                return 255
+            else:
+                return x
+        
+        v_func = np.vectorize(f)
+        threshed_image = np.float32(v_func(cv_image))
+        
+        display_image = self.mask_frame(threshed_image, self.THRESHOLD,self.INTENSITY, cv2.THRESH_BINARY_INV)
+        center_of_mass = self.generate_com(display_image[-100:])
+
+        self.rm.move_to_com(center_of_mass)
+
+        cv2.imshow("Image window", cv2.circle(display_image, center_of_mass, 50, (0, 0, 255)))
         cv2.waitKey(3)
 
-    def mask_frame(self, image):
-        _, masked_frame = cv2.threshold(image, self.threshold, self.intensity, cv2.THRESH_BINARY_INV)
+    def mask_frame(self, image, threshold, intensity, mask_type):
+        _, masked_frame = cv2.threshold(image, threshold, intensity, mask_type)
         
         return masked_frame
 
@@ -42,17 +63,24 @@ class image_converter:
         com = center_of_mass(image)
 
         if isnan(com[0]) or isnan(com[1]):
-            com_loc = prev_com
+            com_loc = self.prev_com
         else:
-            com_loc = (int(com[1]), int(com[0]) + 140)
+            com_loc = (int(com[1]), int(com[0]) + 620)
             self.prev_com = com_loc
 
         return com_loc
 
 
+class RobotMovement:
 
-class robot_movement:
+    # The current design I'm thinking of would essentially
+    # make it so that move_robot would be private to the client.
+    # e.g. the caller would only be able to use straight(), turn(), fork()
 
+
+    TURN_TIME = 2.182
+    TURN_SPD = 0.85
+    
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
@@ -65,14 +93,54 @@ class robot_movement:
         self.move_pub.publish(move)
 
     def stop_robot(self):
-        self.move_robot(x=0,y=0,z=0)
+        self.move_robot()
 
-class robot_timer:
+    # TODO: this gets us out of the starting fork for now.
+    def drive(self):    
+        self.move_robot(x=0.15)
+        rospy.sleep(2.4)
+        self.turn_left()
 
-    def __init__(self):
-        self.timer_sub = rospy.Subscriber('/clock', String, queue_size=1)
+    # Drives the distance of the outer straight, then stops.
+    def straight(self):
+        self.move_robot(x=0.2)
+        rospy.sleep(12.227)
+        
+    # Drives to where the fork in the straight is, then stops.
+    def half(self):
+        self.move_robot(x=0.2)
+        rospy.sleep(6.125)
 
-class plate_reader:
+    # Turns 90 degrees left, then stop.
+    def turn_left(self):
+        self.move_robot(x=0, z=self.TURN_SPD)
+        rospy.sleep(self.TURN_TIME)
+        self.stop_robot()
+
+    # Turns 90 degrees right, then stop.
+    def turn_right(self):
+        self.move_robot(x=0, z=-self.TURN_SPD)
+        rospy.sleep(self.TURN_TIME)
+        self.stop_robot()
+
+
+    ### TODO: remove this, you won't need it anymore
+    def move_to_com(self, com):
+        print(com)
+        if com[1] <= 200:
+            self.move_robot(x=0.2)
+        else:
+            self.move_robot(x=0.2)
+            if com[0] >= 740:
+                self.move_robot(x=0, z=-0.7)
+            elif com[0] <= 440:
+                self.move_robot(x=0, z=0.7)
+
+
+class PlateReader:
+
+    ### TODO: Instantiate a Homography class in here, 
+    # which will detect homographies and predict plates
 
     def __init__(self):
         self.plate_pub = rospy.Publisher('/license_plate', String, queue_size=1)
@@ -80,59 +148,48 @@ class plate_reader:
         self.stop_string = '12345678,mcqueen,-1,ABCD'
 
     def begin_comp(self):
-        self.plate_pub.publish(self.start_string)
+        self.plate_pub.publish(self.start_string) # TODO: We should not start the competition from within PR
 
     def stop_comp(self):
         self.plate_pub.publish(self.stop_string)
 
-def main(args):
-    rm = robot_movement()
-    # rt = robot_timer()
-    pr = plate_reader()
-    ic = image_converter()
 
+def main(args):
+    # TODO: Is it good practice to "start" the competition from the PR class?
+    # We can consider moving and instantiating all classes in a higher level control class.
+    rm = RobotMovement()
+    pr = PlateReader() 
+
+    # Initialize the node.
     rospy.init_node('controller')
     init_rate = rospy.Rate(1)
 
+    # Begin the competition.
     init_rate.sleep()
     pr.begin_comp()
 
-    # turn left onto main road go straight till corner
-    rm.move_robot(x=0.15)
-    rospy.sleep(2.7)
-    rm.move_robot(x=0,z=0.85)
-    rospy.sleep(2.2)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(6)
+    # shut up and drive. this is where something
+    # like a control loop would be. 
+    # (Or a method that calls a control loop)
+    rm.drive() # get out of the fork
+    rm.half()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    
+    
 
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.15)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.25)
-
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.2)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.25)
-
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.21)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.45)
-
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.22)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.45)
-
+    # Stop the robot and the competition.
     rm.stop_robot()
     pr.stop_comp()
 
     init_rate.sleep()
+
 
 if __name__ == '__main__':
     main(sys.argv)
