@@ -14,6 +14,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from scipy.ndimage import center_of_mass
 from math import isnan
 
+
 class ImageConverter:
 
     THRESHOLD = 88
@@ -68,7 +69,15 @@ class ImageConverter:
 
 
 class RobotMovement:
-    ### TODO: implement hardcoded robot movement commands in this class.
+
+    # The current design I'm thinking of would essentially
+    # make it so that move_robot would be private to the client.
+    # e.g. the caller would only be able to use straight(), turn(), fork()
+
+
+    TURN_TIME = 2.2
+    TURN_SPD = 0.85
+    
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
@@ -83,7 +92,37 @@ class RobotMovement:
     def stop_robot(self):
         self.move_robot()
 
-    def move_to_com(self, com): ### TODO: remove this, you won't need it anymore
+    # TODO: this gets us out of the starting fork for now.
+    def drive(self):    
+        self.move_robot(x=0.15)
+        rospy.sleep(2.4)
+        self.turn_left()
+
+    # Drives the distance of the outer straight, then stops.
+    def straight(self):
+        self.move_robot(x=0.2)
+        rospy.sleep(12)
+        
+    # Drives to where the fork in the straight is, then stops.
+    def half(self):
+        self.move_robot(x=0.2)
+        rospy.sleep(6)
+
+    # Turns 90 degrees left, then stop.
+    def turn_left(self):
+        self.move_robot(x=0, z=self.TURN_SPD)
+        rospy.sleep(self.TURN_TIME)
+        self.stop_robot()
+
+    # Turns 90 degrees right, then stop.
+    def turn_right(self):
+        self.move_robot(x=0, z=-self.TURN_SPD)
+        rospy.sleep(self.TURN_TIME)
+        self.stop_robot()
+
+
+    ### TODO: remove this, you won't need it anymore
+    def move_to_com(self, com):
         print(com)
         if com[1] <= 200:
             self.move_robot(x=0.2)
@@ -94,9 +133,11 @@ class RobotMovement:
             elif com[0] <= 440:
                 self.move_robot(x=0, z=0.7)
 
+
 class PlateReader:
 
-    ### TODO: Instantiate a Homography class in here, which will detect homographies and predict plates
+    ### TODO: Instantiate a Homography class in here, 
+    # which will detect homographies and predict plates
 
     def __init__(self):
         self.plate_pub = rospy.Publisher('/license_plate', String, queue_size=1)
@@ -104,60 +145,48 @@ class PlateReader:
         self.stop_string = '12345678,mcqueen,-1,ABCD'
 
     def begin_comp(self):
-        self.plate_pub.publish(self.start_string)
+        self.plate_pub.publish(self.start_string) # TODO: We should not start the competition from within PR
 
     def stop_comp(self):
         self.plate_pub.publish(self.stop_string)
+
 
 def main(args):
     # TODO: Is it good practice to "start" the competition from the PR class?
     # We can consider moving and instantiating all classes in a higher level control class.
     rm = RobotMovement()
-    pr = plate_reader() 
+    pr = PlateReader() 
 
+    # Initialize the node.
     rospy.init_node('controller')
     init_rate = rospy.Rate(1)
 
+    # Begin the competition.
     init_rate.sleep()
     pr.begin_comp()
 
-    ### TODO: move these movement commands into the RobotMovement class
-    # turn left onto main road go straight till corner
-    rm.move_robot(x=0.15)
-    rospy.sleep(2.7)
-    rm.move_robot(x=0,z=0.85)
-    rospy.sleep(2.2)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(6)
+    # shut up and drive. this is where something
+    # like a control loop would be. 
+    # (Or a method that calls a control loop)
+    rm.drive() # get out of the fork
+    rm.half()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    
+    
 
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.15)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.25)
-
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.2)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.25)
-
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.21)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.45)
-
-    #turn left go straight
-    rm.move_robot(x=0, z=0.85)
-    rospy.sleep(2.22)
-    rm.move_robot(x=0.2, z=0)
-    rospy.sleep(12.45)
-
+    # Stop the robot and the competition.
     rm.stop_robot()
     pr.stop_comp()
 
     init_rate.sleep()
+
 
 if __name__ == '__main__':
     main(sys.argv)
