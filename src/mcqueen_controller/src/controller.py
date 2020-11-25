@@ -27,7 +27,7 @@ class ImageConverter:
 
     def __init__(self, rm):
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw',Image,self.callback)
+        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
         self.prev_com = (640, 360)
         self.rm = rm
     
@@ -77,8 +77,7 @@ class RobotMovement:
     # make it so that move_robot would be private to the client.
     # e.g. the caller would only be able to use straight(), turn(), fork()
 
-
-    TURN_TIME = 2.182
+    TURN_TIME = 2.18
     TURN_SPD = 0.85
     
     def __init__(self):
@@ -154,6 +153,19 @@ class PlateReader:
         self.plate_pub.publish(self.stop_string)
 
 
+def drive(rm):
+    # a control sequence that moves the robot around the track.
+    rm.drive() # get out of the fork
+    rm.half()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+    rm.turn_left()
+    rm.straight()
+
 def main(args):
     # TODO: Is it good practice to "start" the competition from the PR class?
     # We can consider moving and instantiating all classes in a higher level control class.
@@ -168,22 +180,9 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
 
-    # shut up and drive. this is where something
-    # like a control loop would be. 
-    # (Or a method that calls a control loop)
-    rm.drive() # get out of the fork
-    rm.half()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-    
-    
+    #drive(rm)
 
+    
     # Stop the robot and the competition.
     rm.stop_robot()
     pr.stop_comp()
