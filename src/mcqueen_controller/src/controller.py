@@ -20,52 +20,57 @@ from math import isnan
 
 class ImageConverter:
 
-    THRESHOLD = 88
+    LINE_THRESHOLD = 240
     INTENSITY = 255
-
-    ### TODO: Reevaluated whether we will need the CoM functions
+    CAMERA_LENGTH = 1280
+    CAMERA_HEIGHT = 720
+    RED = (255,0,0)
 
     def __init__(self, rm):
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw',Image,self.callback)
+        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
         self.prev_com = (640, 360)
         self.rm = rm
     
     def callback(self, image):
         try:
-            cv_image = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
+            camera_img = self.bridge.imgmsg_to_cv2(image, 'mono8') # image grayscaled
         except CvBridgeError as e:
             print(e)
 
-        def f(x):
-            if x < 80:
-                return 255
-            else:
-                return x
-        
-        v_func = np.vectorize(f)
-        threshed_image = np.float32(v_func(cv_image))
-        
-        display_image = self.mask_frame(threshed_image, self.THRESHOLD,self.INTENSITY, cv2.THRESH_BINARY_INV)
-        center_of_mass = self.generate_com(display_image[-100:])
+        # Threshold a vertical slice of the camera feed on the right side
+        img = camera_img[650:,900:] # camera_img[y:,x:] (row,col)
+        _, threshed_img = cv2.threshold(img, self.LINE_THRESHOLD, self.INTENSITY, cv2.THRESH_BINARY) 
 
-        self.rm.move_to_com(center_of_mass)
+        # Compute center of mass of the threshed image
+        my_com = self.generate_com(threshed_img)
+        x = my_com[0]
+        y = my_com[1]
+        print(my_com)
 
-        cv2.imshow("Image window", cv2.circle(display_image, center_of_mass, 50, (0, 0, 255)))
+        # CoM of line following
+        displayed_img = cv2.circle(threshed_img, my_com, 50, (255,0,0))
+        cv2.imshow('guh', displayed_img)
         cv2.waitKey(3)
 
-    def mask_frame(self, image, threshold, intensity, mask_type):
-        _, masked_frame = cv2.threshold(image, threshold, intensity, mask_type)
-        
-        return masked_frame
+        # Control conditions
+        if x < 120:
+            self.rm.move_robot(x=0.0, z=.45)
+        elif 120 <= x and x <= 235:
+            self.rm.move_robot(x=0.125, z=0)
+        else:
+            self.rm.move_robot(x=0., z=-.45)
 
+
+    # Returns center of mass of a threshed image as a tuple,
+    # with the x coordinate in the 0th index and y coordinate in the 1st index
     def generate_com(self, image):
         com = center_of_mass(image)
 
         if isnan(com[0]) or isnan(com[1]):
             com_loc = self.prev_com
         else:
-            com_loc = (int(com[1]), int(com[0]) + 620)
+            com_loc = (int(com[1]), int(com[0]))
             self.prev_com = com_loc
 
         return com_loc
@@ -76,14 +81,10 @@ class RobotMovement:
     # The current design I'm thinking of would essentially
     # make it so that move_robot would be private to the client.
     # e.g. the caller would only be able to use straight(), turn(), fork()
-
-
-    TURN_TIME = 2.182
-    TURN_SPD = 0.85
-    
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
+    # Publishes a move command.
     def move_robot(self, x=0, y=0, z=0):
         move = Twist()
         move.linear.x = x
@@ -92,54 +93,22 @@ class RobotMovement:
 
         self.move_pub.publish(move)
 
+    # Stops the robot.
     def stop_robot(self):
         self.move_robot()
 
-    # TODO: this gets us out of the starting fork for now.
-    def drive(self):    
+    # Gets us into the outer loop.
+    def init(self):
         self.move_robot(x=0.15)
-        rospy.sleep(2.4)
-        self.turn_left()
-
-    # Drives the distance of the outer straight, then stops.
-    def straight(self):
-        self.move_robot(x=0.2)
-        rospy.sleep(12.227)
-        
-    # Drives to where the fork in the straight is, then stops.
-    def half(self):
-        self.move_robot(x=0.2)
-        rospy.sleep(6.125)
-
-    # Turns 90 degrees left, then stop.
-    def turn_left(self):
-        self.move_robot(x=0, z=self.TURN_SPD)
-        rospy.sleep(self.TURN_TIME)
+        rospy.sleep(2.5)
+        self.move_robot(x=0,z=0.85)
+        rospy.sleep(2.2)
         self.stop_robot()
-
-    # Turns 90 degrees right, then stop.
-    def turn_right(self):
-        self.move_robot(x=0, z=-self.TURN_SPD)
-        rospy.sleep(self.TURN_TIME)
-        self.stop_robot()
-
-
-    ### TODO: remove this, you won't need it anymore
-    def move_to_com(self, com):
-        print(com)
-        if com[1] <= 200:
-            self.move_robot(x=0.2)
-        else:
-            self.move_robot(x=0.2)
-            if com[0] >= 740:
-                self.move_robot(x=0, z=-0.7)
-            elif com[0] <= 440:
-                self.move_robot(x=0, z=0.7)
 
 
 class PlateReader:
 
-    ### TODO: Instantiate a Homography class in here, 
+    # TODO: Instantiate a Homography class in here, 
     # which will detect homographies and predict plates
 
     def __init__(self):
@@ -155,8 +124,9 @@ class PlateReader:
 
 
 def main(args):
-    # TODO: Is it good practice to "start" the competition from the PR class?
-    # We can consider moving and instantiating all classes in a higher level control class.
+    # TODO: We can consider moving and instantiating all classes in a higher level control class.
+    # TODO: make sure that our code executes within the competition timing blocks.
+
     rm = RobotMovement()
     pr = PlateReader() 
 
@@ -167,28 +137,18 @@ def main(args):
     # Begin the competition.
     init_rate.sleep()
     pr.begin_comp()
-
-    # shut up and drive. this is where something
-    # like a control loop would be. 
-    # (Or a method that calls a control loop)
-    rm.drive() # get out of the fork
-    rm.half()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
     
+    # start movin bruh
+    rospy.sleep(2.5)
+    rm.init()
+    ic = ImageConverter(rm)
     
+    rospy.sleep(300)
 
     # Stop the robot and the competition.
     rm.stop_robot()
     pr.stop_comp()
-
-    init_rate.sleep()
+    rospy.sleep(1)
 
 
 if __name__ == '__main__':
