@@ -10,8 +10,9 @@ from random import randint
 from PIL import Image, ImageFont, ImageDraw
 
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
+PLATE_PATH = os.path.join(PATH, 'media','plates')
 
-for i in range(0, 16):
+for i in range(0, 3):
 
     # Pick two random letters
     plate_alpha = ""
@@ -37,7 +38,7 @@ for i in range(0, 16):
     # Convert back to OpenCV image and save
     blank_plate = np.array(blank_plate_pil)
     
-    #print(plate_alpha, plate_num)
     # Write to file
-    plate_path = os.path.join(PATH, 'media','plates')
-    cv2.imwrite(os.path.join(plate_path, "plate_{}{}.png".format(plate_alpha, plate_num)), blank_plate)
+    cv2.imwrite(os.path.join(PLATE_PATH, "plate_{}{}.png".format(plate_alpha, plate_num)), blank_plate)
+
+print(len([name for name in os.listdir(PLATE_PATH) if os.path.isfile(os.path.join(PLATE_PATH, name))]) )
