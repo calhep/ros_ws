@@ -10,6 +10,8 @@ from matplotlib import pyplot as plt
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
 PLATE_DIR = os.path.join(PATH, 'media', 'plates')
 
+VALIDATION_SPLIT = 0.2
+
 
 def files_in_folder(path):
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
@@ -27,20 +29,52 @@ def one_hot(c):
     return vec
 
 
-def process(my_file):
+def process_plate(my_file):
     plate_path = os.path.join(PLATE_DIR, my_file)
     plate_img = cv2.imread(plate_path)
-    # plt.imshow(plate_img)
-    # plt.show()
+    
     # crop into subsections (x dataset)
-    print(plate_img.shape)
+    img1 = plate_img[49:349,45:150]
+    img2 = plate_img[49:349,145:250]
+    img3 = plate_img[49:349,347:452]
+    img4 = plate_img[49:349,447:552]
+    imgs = [img1,img2,img3,img4]
 
+    vecs = []
+    for i in range(4):
+        vecs.append(one_hot(my_file[6+i]))
+
+    return imgs, vecs
+
+
+def generate_dataset():
+    plates = files_in_folder(PLATE_DIR)
+
+    X_images = []
+    Y_labels = []
+
+    for p in plates:
+        imgs, vecs = process_plate(p)
+        X_images.extend(imgs)
+        Y_labels.extend(vecs)
+
+    X_dataset = np.array(X_images) / 255  # normalize the data
+    Y_dataset = np.array(Y_labels)
+
+    return X_dataset, Y_dataset
 
 
 def main():
-    plates = files_in_folder(PLATE_DIR)
-    process(plates[0])
+    X_dataset, Y_dataset = generate_dataset()
+    
+    print("Total examples: {}\nTraining examples: {}\nTest examples: {}".
+      format(X_dataset.shape[0],
+             math.ceil(X_dataset.shape[0] * (1-VALIDATION_SPLIT)),
+             math.floor(X_dataset.shape[0] * VALIDATION_SPLIT)))
+    print("X shape: " + str(X_dataset.shape))
+    print("Y shape: " + str(Y_dataset.shape))
 
+    # TODO: CNN training here
 
 
 if __name__ == '__main__':
