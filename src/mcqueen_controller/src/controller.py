@@ -71,7 +71,6 @@ class ImageConverter:
         LIMIT = 710
         LEFT_BOUND = 480
         RIGHT_BOUND = 800
-        LAMBDA = 0.8
         
         # get bottom row of frame
         bottom_row = colored_img[LIMIT:, LEFT_BOUND:RIGHT_BOUND]
@@ -109,9 +108,6 @@ class ImageConverter:
 
 class RobotMovement:
 
-    # The current design I'm thinking of would essentially
-    # make it so that move_robot would be private to the client.
-    # e.g. the caller would only be able to use straight(), turn(), fork()
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
