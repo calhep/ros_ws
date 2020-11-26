@@ -21,12 +21,6 @@ from math import isnan
 
 class ImageConverter:
 
-    LINE_THRESHOLD = 240
-    INTENSITY = 255
-    CAMERA_LENGTH = 1280
-    CAMERA_HEIGHT = 720
-    RED_BOUNDARY = ([17,15,100],[50,56,200])
-
     def __init__(self, rm):
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
