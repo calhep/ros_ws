@@ -48,11 +48,6 @@ class ImageConverter:
         y = my_com[1]
         print(my_com)
 
-        # CoM of line following
-        displayed_img = cv2.circle(threshed_img, my_com, 50, (255,0,0))
-        cv2.imshow('guh', displayed_img)
-        cv2.waitKey(3)
-
         # Control conditions
         if x < 120:
             self.rm.move_robot(x=0.0, z=.45)
