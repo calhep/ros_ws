@@ -12,7 +12,7 @@ from PIL import Image, ImageFont, ImageDraw
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
 PLATE_PATH = os.path.join(PATH, 'media','plates')
 
-for i in range(0, 3):
+for i in range(0, 197):
 
     # Pick two random letters
     plate_alpha = ""
