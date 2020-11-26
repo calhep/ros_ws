@@ -68,9 +68,9 @@ def main():
     X_dataset, Y_dataset = generate_dataset()
     
     print("Total examples: {}\nTraining examples: {}\nTest examples: {}".
-      format(X_dataset.shape[0],
-             math.ceil(X_dataset.shape[0] * (1-VALIDATION_SPLIT)),
-             math.floor(X_dataset.shape[0] * VALIDATION_SPLIT)))
+            format(X_dataset.shape[0], 
+                   math.ceil(X_dataset.shape[0] * (1-VALIDATION_SPLIT)),
+                   math.floor(X_dataset.shape[0] * VALIDATION_SPLIT)))
     print("X shape: " + str(X_dataset.shape))
     print("Y shape: " + str(Y_dataset.shape))
 
