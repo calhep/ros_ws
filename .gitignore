@@ -2,4 +2,4 @@ src/2020T1_competition/
 build/*
 devel/*
 src/mcqueen_controller/src/media/*
-src/cnn_trainer/src/media/*
+*.png
