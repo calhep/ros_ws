@@ -20,7 +20,7 @@ from math import isnan
 
 class ImageConverter:
 
-    THRESHOLD = 88
+    LINE_THRESHOLD = 240
     INTENSITY = 255
     CAMERA_LENGTH = 1280
     CAMERA_HEIGHT = 720
@@ -39,8 +39,8 @@ class ImageConverter:
             print(e)
 
         # Threshold a vertical slice of the camera feed on the right side
-        img = camera_img[:,900:] # 640 for half the cam img
-        _, threshed_img = cv2.threshold(img, 250, 255, cv2.THRESH_BINARY) 
+        img = camera_img[650:,900:] # camera_img[y:,x:] (row,col)
+        _, threshed_img = cv2.threshold(img, self.LINE_THRESHOLD, self.INTENSITY, cv2.THRESH_BINARY) 
 
         # Compute center of mass of the threshed image
         my_com = self.generate_com(threshed_img)
@@ -48,17 +48,18 @@ class ImageConverter:
         y = my_com[1]
         print(my_com)
 
+        # CoM of line following
         displayed_img = cv2.circle(threshed_img, my_com, 50, (255,0,0))
         cv2.imshow('guh', displayed_img)
         cv2.waitKey(3)
 
         # Control conditions
-        if x < 125:
-            self.rm.move_robot(x=0.05, z=0.6)
-        elif 125 <= x and x <= 255:
-            self.rm.move_robot(x=0.1, z=0)
+        if x < 120:
+            self.rm.move_robot(x=0.0, z=.45)
+        elif 120 <= x and x <= 235:
+            self.rm.move_robot(x=0.125, z=0)
         else:
-            self.rm.move_robot(x=0.05, z=-0.6)
+            self.rm.move_robot(x=0., z=-.45)
 
 
     # Returns center of mass of a threshed image as a tuple,
@@ -80,13 +81,10 @@ class RobotMovement:
     # The current design I'm thinking of would essentially
     # make it so that move_robot would be private to the client.
     # e.g. the caller would only be able to use straight(), turn(), fork()
-
-    TURN_TIME = 2.18
-    TURN_SPD = 0.85
-    
     def __init__(self):
         self.move_pub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
+    # Publishes a move command.
     def move_robot(self, x=0, y=0, z=0):
         move = Twist()
         move.linear.x = x
@@ -95,9 +93,11 @@ class RobotMovement:
 
         self.move_pub.publish(move)
 
+    # Stops the robot.
     def stop_robot(self):
         self.move_robot()
 
+    # Gets us into the outer loop.
     def init(self):
         self.move_robot(x=0.15)
         rospy.sleep(2.5)
@@ -105,51 +105,10 @@ class RobotMovement:
         rospy.sleep(2.2)
         self.stop_robot()
 
-    # TODO: this gets us out of the starting fork for now.
-    def drive(self):    
-        self.move_robot(x=0.15)
-        rospy.sleep(2.4)
-        self.turn_left()
-
-    # Drives the distance of the outer straight, then stops.
-    def straight(self):
-        self.move_robot(x=0.2)
-        rospy.sleep(12.227)
-        
-    # Drives to where the fork in the straight is, then stops.
-    def half(self):
-        self.move_robot(x=0.2)
-        rospy.sleep(6.125)
-
-    # Turns 90 degrees left, then stop.
-    def turn_left(self):
-        self.move_robot(x=0, z=self.TURN_SPD)
-        rospy.sleep(self.TURN_TIME)
-        self.stop_robot()
-
-    # Turns 90 degrees right, then stop.
-    def turn_right(self):
-        self.move_robot(x=0, z=-self.TURN_SPD)
-        rospy.sleep(self.TURN_TIME)
-        self.stop_robot()
-
-
-    ### TODO: remove this, you won't need it anymore
-    def move_to_com(self, com):
-        print(com)
-        if com[1] <= 200:
-            self.move_robot(x=0.2)
-        else:
-            self.move_robot(x=0.2)
-            if com[0] >= 740:
-                self.move_robot(x=0, z=-0.7)
-            elif com[0] <= 440:
-                self.move_robot(x=0, z=0.7)
-
 
 class PlateReader:
 
-    ### TODO: Instantiate a Homography class in here, 
+    # TODO: Instantiate a Homography class in here, 
     # which will detect homographies and predict plates
 
     def __init__(self):
@@ -164,22 +123,10 @@ class PlateReader:
         self.plate_pub.publish(self.stop_string)
 
 
-def drive(rm):
-    # a control sequence that moves the robot around the track.
-    rm.drive() # get out of the fork
-    rm.half()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-    rm.turn_left()
-    rm.straight()
-
 def main(args):
-    # TODO: Is it good practice to "start" the competition from the PR class?
-    # We can consider moving and instantiating all classes in a higher level control class.
+    # TODO: We can consider moving and instantiating all classes in a higher level control class.
+    # TODO: make sure that our code executes within the competition timing blocks.
+
     rm = RobotMovement()
     pr = PlateReader() 
 
@@ -196,12 +143,12 @@ def main(args):
     rm.init()
     ic = ImageConverter(rm)
     
-    rospy.sleep(45)
-    # Stop the robot and the competition.
-    # rm.stop_robot()
-    # pr.stop_comp()
+    rospy.sleep(300)
 
-    init_rate.sleep()
+    # Stop the robot and the competition.
+    rm.stop_robot()
+    pr.stop_comp()
+    rospy.sleep(1)
 
 
 if __name__ == '__main__':
