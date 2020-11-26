@@ -8,7 +8,7 @@ import sys
 import cv2
 import numpy as np
 
-import homography
+import homography as hm
 import callback_handling as ch
 
 from geometry_msgs.msg import Twist
@@ -26,6 +26,8 @@ class ImageConverter:
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
         self.prev_com = (640, 360)
         self.rm = rm
+
+        self.hom_plate = hm.Homography('/home/fizzer/ros_ws/src/mcqueen_controller/src/media/p2_crop.png')
     
 
     def callback(self, image):
@@ -34,6 +36,8 @@ class ImageConverter:
             colored_img = self.bridge.imgmsg_to_cv2(image, 'bgr8')
         except CvBridgeError as e:
             print(e)
+
+        self.hom_plate.detect_features(colored_img)
 
         # If the red bar of crosswalk is detected, check for pedestrian
         if ch.is_at_crosswalk(colored_img):
@@ -44,13 +48,13 @@ class ImageConverter:
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[650:,900:], self.prev_com)
 
-        # Control conditions
-        if x < 120:
-            self.rm.move_robot(x=0.0, z=.45)
-        elif 120 <= x and x <= 235:
-            self.rm.move_robot(x=0.125, z=0)
-        else:
-            self.rm.move_robot(x=0., z=-.45)
+        # # Control conditions
+        # if x < 120:
+        #     self.rm.move_robot(x=0.0, z=.45)
+        # elif 120 <= x and x <= 235:
+        #     self.rm.move_robot(x=0.125, z=0)
+        # else:
+        #     self.rm.move_robot(x=0., z=-.45)
 
 
 class RobotMovement:
@@ -117,7 +121,7 @@ def main(args):
     rm.init()
     ic = ImageConverter(rm)
     
-    rospy.sleep(300)
+    rospy.sleep(600)
 
     # Stop the robot and the competition.
     rm.stop_robot()
