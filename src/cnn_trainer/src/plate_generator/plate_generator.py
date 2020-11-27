@@ -15,10 +15,9 @@ from PIL import Image, ImageFont, ImageDraw
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
 PLATE_PATH = os.path.join(PATH, 'media','plates')
 TEST_DATA_DIR = os.path.join(PATH, 'media','test_set')
-AUG_SET = os.path.join(PATH, 'media','aug_set')
 
 # Choose directory to write to:
-my_path = AUG_SET
+my_path = PLATE_PATH
 
 
 for i in range(0, 1):
