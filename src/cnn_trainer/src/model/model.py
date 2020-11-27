@@ -6,7 +6,8 @@ from tensorflow.python.keras import models
 from tensorflow.python.keras import optimizers
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.utils import plot_model
-from tensorflow.python.keras.preproccesing.image import ImageDataGenerator
+from tensorflow.python.keras.preprocessing import image
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 import util as util
 
