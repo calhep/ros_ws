@@ -27,7 +27,7 @@ class ImageConverter:
         self.prev_com = (640, 360)
         self.rm = rm
   
-        self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/p{}_source.png'.format(x + 1) for x in range(8)]
+        self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/plate_{}.png'.format(x + 1) for x in range(8)]
         self.plate_num = 0
         self.hm = hm.Homography(self.image_paths)
 

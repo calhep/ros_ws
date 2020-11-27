@@ -13,6 +13,7 @@ class Homography():
 
     def __init__(self, template_paths):
         self.image_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in template_paths]
+        print(len(template_paths))
 
 
     def detect_features(self, grayframe, plate_num):
@@ -38,12 +39,14 @@ class Homography():
             
             matrix, mask = cv2.findHomography(train_pts, query_pts, cv2.RANSAC, 5.0)
 
-            # # Perspective transform
+            # Perspective transform
+            h, w = self.image_templates[plate_num].shape
             # pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
             # dst = cv2.perspectiveTransform(pts, matrix)
 
             cv2.imshow('gyuh', cv2.warpPerspective(grayframe, matrix, (w, h)))
             cv2.waitKey(3)
+            print(len(good_points))
             # return cv2.polylines(frame, [np.int32(dst)], True, (255, 0, 0), 3)
 
             return True
