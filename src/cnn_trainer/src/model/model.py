@@ -159,7 +159,7 @@ def main():
     
     history_conv = conv_model.fit(X_dataset, Y_dataset, 
                               validation_split=VALIDATION_SPLIT, 
-                              epochs=1, 
+                              epochs=2, 
                               batch_size=16)
 
     # Fit the data and get history of the model over time
@@ -186,8 +186,6 @@ def main():
     plate_to_test = plates[0]
 
     predict_plate(plate_to_test, conv_model)
-
-
 
 
 if __name__ == '__main__':
