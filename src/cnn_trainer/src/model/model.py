@@ -107,13 +107,14 @@ def main():
     TRAIN = False
     NEW_MODEL = False
     PREDICT = True
+    USE_TEST_DATASET = False
 
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
     EPOCHS = 3
 
     # Get datasets (A lot of plates)
-    X_dataset, Y_dataset = util.get_dataset()
+    X_dataset, Y_dataset = util.get_dataset() # TODO: Add an option to specify what kind of dataset
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
