@@ -165,8 +165,8 @@ def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
     PRINT_HISTORY = True
-    LEARNING_RATE = 1e-5
-    EPOCHS = 5
+    LEARNING_RATE = 1e-6
+    EPOCHS = 20
 
     # Get datasets and choose whether to generate a new model or load a model
     X_dataset, Y_dataset = get_dataset()
