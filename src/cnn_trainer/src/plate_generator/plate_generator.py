@@ -12,6 +12,8 @@ from PIL import Image, ImageFont, ImageDraw
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
 PLATE_PATH = os.path.join(PATH, 'media','plates')
 
+# TODO: generate faulty images using keras.preprocessing augmentation
+
 for i in range(0, 1):
 
     # Pick two random letters

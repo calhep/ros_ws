@@ -6,11 +6,11 @@ import os
 
 from string import ascii_lowercase as LC
 from matplotlib import pyplot as plt
-from keras import layers
-from keras import models
-from keras import optimizers
-from keras import backend
-from keras.utils import plot_model
+from tensorflow.python.keras import layers
+from tensorflow.python.keras import models
+from tensorflow.python.keras import optimizers
+from tensorflow.python.keras import backend
+from tensorflow.python.keras.utils import plot_model
 
 
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
@@ -125,7 +125,7 @@ def get_model(X_dataset, Y_dataset, lr=1e-4, print_summary=False, new=False):
     # Create a new model and save it or load one locally.
     if new:
         conv_model = generate_model(lr)
-       # save_model(conv_model)
+        save_model(conv_model)
     else:
         conv_model = load_model()
 
@@ -165,8 +165,8 @@ def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
     PRINT_HISTORY = True
-    LEARNING_RATE = 1e-5
-    EPOCHS = 5
+    LEARNING_RATE = 1e-4
+    EPOCHS = 1
 
     # Get datasets and choose whether to generate a new model or load a model
     X_dataset, Y_dataset = get_dataset()
