@@ -26,9 +26,10 @@ class ImageConverter:
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
         self.prev_com = (640, 360)
         self.rm = rm
-
-        self.hom_plate = hm.Homography('/home/fizzer/ros_ws/src/mcqueen_controller/src/media/p2_crop.png')
-    
+  
+        self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/p{}_source.png'.format(x + 1) for x in range(8)]
+        self.plate_num = 0
+        self.hm = hm.Homography(self.image_paths)
 
     def callback(self, image):
         try:
@@ -37,7 +38,9 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-        self.hom_plate.detect_features(colored_img)
+        if self.hm.detect_features(grayscale_img, self.plate_num):
+            self.plate_num += 1
+
 
         # If the red bar of crosswalk is detected, check for pedestrian
         if ch.is_at_crosswalk(colored_img):
@@ -118,7 +121,7 @@ def main(args):
     
     # # start movin bruh
     rospy.sleep(1)
-    rm.init()
+    # rm.init()
     ic = ImageConverter(rm)
     
     rospy.sleep(600)
