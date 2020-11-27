@@ -54,7 +54,6 @@ def get_model(lr=1e-4, new=False):
     if new:
         print("compiling new model")
         model = generate_model(lr)
-        save_model(model)
     else:
         print("Loading local model")
         model = load_model()
@@ -87,6 +86,8 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs):
     plt.legend(['Train accuracy', 'Val accuracy'], loc='lower right')
     plt.show()
 
+    return model
+
 
 # Predict a plate using a model
 def predict_plate(plate, model):
@@ -112,7 +113,7 @@ def predict_plate(plate, model):
 def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
-    NEW_MODEL = False
+    NEW_MODEL = True
     PREDICT = True
 
     LEARNING_RATE = 1e-4
@@ -126,8 +127,9 @@ def main():
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
 
     # Train the model if specified
-    if TRAIN:
-        train_model(model, X_dataset, Y_dataset, VALIDATION_SPLIT, EPOCHS)
+    if TRAIN or NEW_MODEL:
+        model = train_model(model, X_dataset, Y_dataset, VALIDATION_SPLIT, EPOCHS)
+        save_model(model)
 
     # Predict a plate if specified
     if PREDICT:
