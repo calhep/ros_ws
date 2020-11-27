@@ -38,9 +38,8 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-        if self.hm.detect_features(grayscale_img, self.plate_num):
-            self.plate_num += 1
-
+        # if self.hm.detect_features(grayscale_img, self.plate_num):
+        #     self.plate_num += 1
 
         # If the red bar of crosswalk is detected, check for pedestrian
         if ch.is_at_crosswalk(colored_img):
@@ -51,13 +50,13 @@ class ImageConverter:
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[650:,900:], self.prev_com)
 
-        # # Control conditions
-        # if x < 120:
-        #     self.rm.move_robot(x=0.0, z=.45)
-        # elif 120 <= x and x <= 235:
-        #     self.rm.move_robot(x=0.125, z=0)
-        # else:
-        #     self.rm.move_robot(x=0., z=-.45)
+        # Control conditions
+        if x < 120:
+            self.rm.move_robot(x=0.0, z=.45)
+        elif 120 <= x and x <= 235:
+            self.rm.move_robot(x=0.125, z=0)
+        else:
+            self.rm.move_robot(x=0., z=-.45)
 
 
 class RobotMovement:
@@ -121,7 +120,7 @@ def main(args):
     
     # # start movin bruh
     rospy.sleep(1)
-    # rm.init()
+    rm.init()
     ic = ImageConverter(rm)
     
     rospy.sleep(600)
