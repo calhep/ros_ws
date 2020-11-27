@@ -126,7 +126,7 @@ def main():
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
 
-    # Train the model if specified
+    # Train the model if specified, always train if it's a new model.
     if TRAIN or NEW_MODEL:
         model = train_model(model, X_dataset, Y_dataset, VALIDATION_SPLIT, EPOCHS)
         save_model(model)
