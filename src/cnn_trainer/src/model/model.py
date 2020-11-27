@@ -30,46 +30,62 @@ def load_model():
 
 # Generate completely new training model
 def generate_model(lr):
-    conv_model = models.Sequential()
-    conv_model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(300, 105, 3)))
-    conv_model.add(layers.MaxPooling2D((2, 2)))
-    conv_model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-    conv_model.add(layers.MaxPooling2D((2, 2)))
-    conv_model.add(layers.Flatten())
-    conv_model.add(layers.Dropout(0.5))
-    conv_model.add(layers.Dense(512, activation='relu'))
-    conv_model.add(layers.Dense(36, activation='softmax'))
+    model = models.Sequential()
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(300, 105, 3)))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Flatten())
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(512, activation='relu'))
+    model.add(layers.Dense(36, activation='softmax'))
 
     # Set Learning Rate and Compile Model
-    conv_model.compile(loss='categorical_crossentropy',
+    model.compile(loss='categorical_crossentropy',
                     optimizer=optimizers.RMSprop(lr=lr),
                     metrics=['acc'])
 
-    return conv_model
+    return model
 
 
 # Get a model either by generating a new one or load from local
-def get_model(X_dataset, Y_dataset, lr=1e-4, vs=0.2, print_summary=False, new=False):  
-    
-    print("Total examples: {}\nTraining examples: {}\nTest examples: {}".
-            format(X_dataset.shape[0], 
-                   math.ceil(X_dataset.shape[0] * (1-vs)),
-                   math.floor(X_dataset.shape[0] * vs)))
-    print("X shape: " + str(X_dataset.shape))
-    print("Y shape: " + str(Y_dataset.shape))
+def get_model(lr=1e-4, new=False):  
 
-    # Create a new model and save it or load one locally.
     if new:
         print("compiling new model")
-        conv_model = generate_model(lr)
-        save_model(conv_model)
+        model = generate_model(lr)
+        save_model(model)
     else:
         print("Loading local model")
-        conv_model = load_model()
+        model = load_model()
 
-    conv_model.summary()
+    model.summary()
 
-    return conv_model
+    return model
+
+
+def train_model(model, X_dataset, Y_dataset, vs, epochs):
+    history_conv = model.fit(X_dataset, Y_dataset, 
+                                    validation_split=vs, 
+                                    epochs=epochs, 
+                                    batch_size=16)
+
+    # Fit the data and get history of the model over time, if specified
+    plt.plot(history_conv.history['loss'])
+    plt.plot(history_conv.history['val_loss'])
+    plt.title('Model Loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Training loss', 'Validation loss'], loc='upper right')
+    plt.show()
+
+    plt.plot(history_conv.history['acc'])
+    plt.plot(history_conv.history['val_acc'])
+    plt.title('Model Accuracy')
+    plt.ylabel('Accuracy (%)')
+    plt.xlabel('Epoch')
+    plt.legend(['Train accuracy', 'Val accuracy'], loc='lower right')
+    plt.show()
 
 
 # Predict a plate using a model
@@ -95,47 +111,31 @@ def predict_plate(plate, model):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = False
-    PRINT_HISTORY = False
+    TRAIN = True
+    NEW_MODEL = False
+    PREDICT = True
+
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 1
+    EPOCHS = 3
 
-    # Get datasets and choose whether to generate a new model or load a model
+    # Get datasets (A lot of plates)
     X_dataset, Y_dataset = util.get_dataset()
-    conv_model = get_model(X_dataset, Y_dataset, lr=LEARNING_RATE, new=False)
-    
-    # TODO: This can be its own function
+
+    # Generate model or retrieve model
+    model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
+
+    # Train the model if specified
     if TRAIN:
-        history_conv = conv_model.fit(X_dataset, Y_dataset, 
-                                    validation_split=VALIDATION_SPLIT, 
-                                    epochs=EPOCHS, 
-                                    batch_size=16)
+        train_model(model, X_dataset, Y_dataset, VALIDATION_SPLIT, EPOCHS)
 
-    # Fit the data and get history of the model over time, if specified
-    if PRINT_HISTORY:
-        plt.plot(history_conv.history['loss'])
-        plt.plot(history_conv.history['val_loss'])
-        plt.title('Model Loss')
-        plt.ylabel('Loss')
-        plt.xlabel('Epoch')
-        plt.legend(['Training loss', 'Validation loss'], loc='upper right')
-        plt.show()
+    # Predict a plate if specified
+    if PREDICT:
+        plates = util.files_in_folder(PLATE_DIR)
+        plate_to_test = plates[279]
 
-        plt.plot(history_conv.history['acc'])
-        plt.plot(history_conv.history['val_acc'])
-        plt.title('Model Accuracy')
-        plt.ylabel('Accuracy (%)')
-        plt.xlabel('Epoch')
-        plt.legend(['Train accuracy', 'Val accuracy'], loc='lower right')
-        plt.show()
-
-    # Testing the model
-    plates = util.files_in_folder(PLATE_DIR)
-    print("Testing:", plates[300])
-    plate_to_test = plates[300]
-
-    predict_plate(plate_to_test, conv_model)
+        print("Testing:", plate_to_test)
+        predict_plate(plate_to_test, model)
 
 
 if __name__ == '__main__':

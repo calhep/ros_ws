@@ -72,3 +72,13 @@ def get_dataset():
     Y_dataset = np.array(Y_labels)
 
     return X_dataset, Y_dataset
+
+
+# Prints info about datasets
+def print_dataset_info(X_dataset, Y_dataset, vs):
+    print("Total examples: {}\nTraining examples: {}\nValidation examples: {}".
+            format(X_dataset.shape[0], 
+                   math.ceil(X_dataset.shape[0] * (1-vs)),
+                   math.floor(X_dataset.shape[0] * vs)))
+    print("X shape: " + str(X_dataset.shape))
+    print("Y shape: " + str(Y_dataset.shape))
