@@ -57,11 +57,43 @@ def get_model(lr=1e-4, new=False):
     return model
 
 
-def train_model(model, X_dataset, Y_dataset, vs, epochs):
-    history_conv = model.fit(X_dataset, Y_dataset, 
-                                    validation_split=vs, 
-                                    epochs=epochs, 
-                                    batch_size=16)
+def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
+
+    if augment:
+        print("Augmenting data.")
+
+        aug = ImageDataGenerator(
+            shear_range=0.15,
+            rotation_range=10,
+            zoom_range=0.10,
+            preprocessing_function=util.add_noise,
+            validation_split=vs
+        )
+
+        print("Creating augmented datasets.")
+
+        training_dataset = aug.flow(X_dataset, Y_dataset, subset='training')
+        validation_dataset = aug.flow(X_dataset, Y_dataset, subset='validation')
+
+        print('Training using generator.')
+
+        history_conv = model.fit(
+            training_dataset,
+            batch_size=16,
+            epochs=epochs,
+            verbose=1,
+            validation_data=validation_dataset,
+        )
+
+    else:
+        history_conv = model.fit(X_dataset, Y_dataset, 
+                            validation_split=vs,
+                            verbose=1, 
+                            epochs=epochs, 
+                            batch_size=16
+        )
+
+    print('Model trained.')
 
     # Fit the data and get history of the model over time, if specified
     plt.plot(history_conv.history['loss'])
@@ -109,29 +141,36 @@ def predict_plate(plate, model):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = False
-    NEW_MODEL = False
+    TRAIN = True
+    NEW_MODEL = True
     PREDICT = True
+    AUGMENT = True
     USE_TEST_DATASET = False
 
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 3
+    EPOCHS = 5
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
 
     # If specified, train the model against training/validation data, always train if it's a new model.
     if TRAIN or NEW_MODEL:
-        # Get datasets from media/plates (contains training/validation sets)
         X_dataset, Y_dataset = util.get_dataset() 
-        model = train_model(model, X_dataset, Y_dataset, VALIDATION_SPLIT, EPOCHS)
+
+        model = train_model(model,
+            X_dataset,
+            Y_dataset,
+            VALIDATION_SPLIT,
+            EPOCHS,
+            augment=AUGMENT)
+
         save_model(model)
 
     # Predict a plate if specified
     if PREDICT:
         plates = util.files_in_folder(util.PLATE_DIR)
-        plate_to_test = plates[43]
+        plate_to_test = plates[34]
         print("Testing ", plate_to_test)
         predict_plate(plate_to_test, model)
 

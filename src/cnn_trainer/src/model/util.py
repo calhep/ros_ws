@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import math
 import cv2
 import os
@@ -83,3 +84,14 @@ def print_dataset_info(X_dataset, Y_dataset, vs):
                    math.floor(X_dataset.shape[0] * vs)))
     print("X shape: " + str(X_dataset.shape))
     print("Y shape: " + str(Y_dataset.shape))
+
+
+# Generate gaussian noise in img
+# https://stackoverflow.com/questions/43382045/keras-realtime-augmentation-adding-noise-and-contrast
+def add_noise(img):
+    VARIABILITY = 0.25
+    deviation = VARIABILITY*random.random()
+    noise = np.random.normal(0, deviation, img.shape)
+    img += noise
+    np.clip(img, 0., 255.)
+    return img
