@@ -116,23 +116,24 @@ def main():
     VALIDATION_SPLIT = 0.2
     EPOCHS = 3
 
-    # Get datasets (A lot of plates)
-    X_dataset, Y_dataset = util.get_dataset() # TODO: Add an option to specify what kind of dataset
-
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
 
-    # Train the model if specified, always train if it's a new model.
+    # If specified, train the model against training/validation data, always train if it's a new model.
     if TRAIN or NEW_MODEL:
+        # Get datasets from media/plates (contains training/validation sets)
+        X_dataset, Y_dataset = util.get_dataset() 
         model = train_model(model, X_dataset, Y_dataset, VALIDATION_SPLIT, EPOCHS)
         save_model(model)
 
     # Predict a plate if specified
     if PREDICT:
         plates = util.files_in_folder(util.PLATE_DIR)
-        plate_to_test = plates[69]
-
+        plate_to_test = plates[43]
+        print("Testing ", plate_to_test)
         predict_plate(plate_to_test, model)
+
+        # TODO: Loop here that gets files_in_folder(TEST_DATA_DIR), assert model gets them all correct.
 
 
 if __name__ == '__main__':
