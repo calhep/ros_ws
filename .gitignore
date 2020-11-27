@@ -2,5 +2,5 @@ src/2020T1_competition/
 build/*
 devel/*
 src/mcqueen_controller/src/media/*
-*.hdf
+src/cnn_trainer/media/keras/*
 *.png
