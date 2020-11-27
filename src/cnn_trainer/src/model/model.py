@@ -87,6 +87,7 @@ def predict_plate(plate, model):
     dataset = np.array(imgs) / 255
 
     chars = []
+    true = []
 
     for i in range(4):
         image = np.expand_dims(dataset[i], axis=0)
@@ -97,8 +98,10 @@ def predict_plate(plate, model):
         y_predicted = model.predict(image)[0]
         index_predicted = np.argmax(y_predicted)
 
+        true.append(util.index_to_val(index_true))
         chars.append(util.index_to_val(index_predicted))
 
+    print("Actual:", true) 
     print("Predicted:", chars) 
 
 
@@ -127,9 +130,8 @@ def main():
     # Predict a plate if specified
     if PREDICT:
         plates = util.files_in_folder(util.PLATE_DIR)
-        plate_to_test = plates[159]
+        plate_to_test = plates[69]
 
-        print("Testing:", plate_to_test)
         predict_plate(plate_to_test, model)
 
 
