@@ -1,4 +1,3 @@
-import math
 import numpy as np
 import os
 
@@ -12,15 +11,9 @@ from tensorflow.python.keras.utils import plot_model
 import util as util
 
 
-PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
-PLATE_DIR = os.path.join(PATH, 'media', 'plates')
-MODEL_PATH = os.path.join(PATH, 'src', 'model')
-
-
 # Save a Keras model
 def save_model(model):
     model.save('keras/my_model')
-    return
 
 
 # Load a Keras model
@@ -112,8 +105,8 @@ def predict_plate(plate, model):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = True
-    NEW_MODEL = True
+    TRAIN = False
+    NEW_MODEL = False
     PREDICT = True
 
     LEARNING_RATE = 1e-4
@@ -133,8 +126,8 @@ def main():
 
     # Predict a plate if specified
     if PREDICT:
-        plates = util.files_in_folder(PLATE_DIR)
-        plate_to_test = plates[279]
+        plates = util.files_in_folder(util.PLATE_DIR)
+        plate_to_test = plates[159]
 
         print("Testing:", plate_to_test)
         predict_plate(plate_to_test, model)
