@@ -114,6 +114,11 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
     return model
 
 
+# Visualize the output from the ImageDataGenerator
+def visualize_idg(img_arr):
+    return
+
+
 # Predict a plate using a model
 def predict_plate(plate, model):
     imgs, vecs = util.process_plate(plate)
