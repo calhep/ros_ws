@@ -4,6 +4,7 @@ import math
 import cv2
 import os
 
+from scipy.ndimage.filters import uniform_filter
 from string import ascii_lowercase as LC
 from matplotlib import pyplot as plt
 
@@ -132,10 +133,12 @@ def print_dataset_info(X_dataset, Y_dataset, vs):
 # Generate gaussian noise in img
 # https://stackoverflow.com/questions/43382045/keras-realtime-augmentation-adding-noise-and-contrast
 def add_noise(img):
-    VARIABILITY = 10
+    VARIABILITY = 0.5
     deviation = VARIABILITY*random.random()
     noise = np.random.normal(0, deviation, img.shape)
     img += noise
+
+    img = uniform_filter(img,size=(35,35,1))
     np.clip(img, 0., 255.)
     return img
 

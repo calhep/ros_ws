@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 from matplotlib import pyplot as plt
 from tensorflow.python.keras import layers
@@ -66,12 +67,12 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
             rotation_range=30,
             zoom_range=0.4,
             preprocessing_function=util.add_noise,
-            brightness_range=[0.1,1.3],
+            brightness_range=[0.35,1.3],
             validation_split=vs
         )
 
         print("Visualizing IDG.")
-       # visualize_idg(aug, X_dataset * 255)
+        #visualize_idg(aug, X_dataset * 255)
 
         print("Creating augmented datasets.")
 
@@ -186,7 +187,7 @@ def predict_test_set(plate, model):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = False
+    TRAIN = True
     NEW_MODEL = False
     PREDICT = True
     AUGMENT = True
@@ -194,7 +195,7 @@ def main():
 
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 20
+    EPOCHS = 40
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
@@ -219,9 +220,9 @@ def main():
         print("Testing ", plate_to_test)
         predict_plate(plate_to_test, model)
 
-        print("Testing from test set")
-        test_plate = util.files_in_folder(util.TEST_PATH)[0]
-        predict_test_set(test_plate, model)
+        # print("Testing from test set")
+        # test_plate = util.files_in_folder(util.TEST_PATH)[0]
+        # predict_test_set(test_plate, model)
 
 
 if __name__ == '__main__':
