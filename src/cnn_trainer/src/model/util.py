@@ -89,7 +89,7 @@ def print_dataset_info(X_dataset, Y_dataset, vs):
 # Generate gaussian noise in img
 # https://stackoverflow.com/questions/43382045/keras-realtime-augmentation-adding-noise-and-contrast
 def add_noise(img):
-    VARIABILITY = 0.25
+    VARIABILITY = 0.9
     deviation = VARIABILITY*random.random()
     noise = np.random.normal(0, deviation, img.shape)
     img += noise
