@@ -62,11 +62,11 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
         print("Augmenting data.")
 
         aug = ImageDataGenerator(
-            shear_range=0.75,
-            rotation_range=35,
+            shear_range=0.80,
+            rotation_range=30,
             zoom_range=0.4,
             preprocessing_function=util.add_noise,
-            brightness_range=[0.3,1.3],
+            brightness_range=[0.1,1.3],
             validation_split=vs
         )
 
@@ -145,8 +145,8 @@ def predict_plate(plate, model):
     true = []
 
     for i in range(4):
-        plt.imshow(dataset[i] * 255)
-        plt.show()
+        # plt.imshow(dataset[i])
+        # plt.show()
         image = np.expand_dims(dataset[i], axis=0)
 
         y_true = vecs[i]
@@ -165,14 +165,14 @@ def predict_plate(plate, model):
 # Predict the plates in the test set
 def predict_test_set(plate, model):
     imgs = util.process_homographic_plate(plate)
-    dataset = np.array(imgs) / 255
+    dataset = np.array(imgs)
     print(len(dataset))
 
     chars = []
 
     for i in range(4):
-        plt.imshow(dataset[i] * 255)
-        plt.show()
+        # plt.imshow(dataset[i])
+        # plt.show()
         image = np.expand_dims(dataset[i], axis=0)
 
         y_predicted = model.predict(image)[0]

@@ -56,9 +56,9 @@ def process_plate(my_file):
     for i in range(4):
         vecs.append(one_hot(my_file[6+i]))
 
-    for c in imgs:
-        plt.imshow(c)
-        plt.show()
+    # for c in imgs:
+    #     plt.imshow(c)
+    #     plt.show()
 
     return imgs, vecs
 
@@ -93,12 +93,21 @@ def process_homographic_plate(my_file):
     char3 = cv2.resize(img_upscaled[430:535,216:269], (105,300))
     char4 = cv2.resize(img_upscaled[430:535,260:317], (105,300))
 
-    chars = [char1, char2, char3, char4]
+    # boundaries for red
+    lower_red = np.array([0,130,0])
+    upper_red = np.array([255,255,225])
 
-    # for c in chars:
-    #     plt.imshow(c)
-    #     plt.show()
-    print(char1.shape)
+    def mask(x):
+        hsv = cv2.cvtColor(x,cv2.COLOR_BGR2HSV)
+        red_mask = cv2.inRange(hsv,lower_red,upper_red)
+        return cv2.bitwise_and(x,x,mask=red_mask)
+
+    chars = [mask(char1), mask(char2), mask(char3), mask(char4)]
+
+    for c in chars:
+        plt.imshow(c)
+        plt.show()
+
     return chars
 
 
@@ -123,7 +132,7 @@ def print_dataset_info(X_dataset, Y_dataset, vs):
 # Generate gaussian noise in img
 # https://stackoverflow.com/questions/43382045/keras-realtime-augmentation-adding-noise-and-contrast
 def add_noise(img):
-    VARIABILITY = 0.9
+    VARIABILITY = 10
     deviation = VARIABILITY*random.random()
     noise = np.random.normal(0, deviation, img.shape)
     img += noise
