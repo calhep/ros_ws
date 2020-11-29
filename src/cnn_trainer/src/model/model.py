@@ -159,10 +159,15 @@ def predict_plate(plate, model):
     print("Predicted:", chars) 
 
 
+# Predict the plates in the test set
+def predict_test_set():
+    return
+
+
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = True
-    NEW_MODEL = True
+    TRAIN = False
+    NEW_MODEL = False
     PREDICT = True
     AUGMENT = True
     USE_TEST_DATASET = False # not in use rn
@@ -176,7 +181,7 @@ def main():
 
     # If specified, train the model against training/validation data, always train if it's a new model.
     if TRAIN or NEW_MODEL:
-        X_dataset, Y_dataset = util.get_dataset() 
+        X_dataset, Y_dataset = util.get_training_dataset() 
 
         model = train_model(model,
             X_dataset,
@@ -193,8 +198,6 @@ def main():
         plate_to_test = plates[34]
         print("Testing ", plate_to_test)
         predict_plate(plate_to_test, model)
-
-        # TODO: Loop here that gets files_in_folder(TEST_DATA_DIR), assert model gets them all correct.
 
 
 if __name__ == '__main__':

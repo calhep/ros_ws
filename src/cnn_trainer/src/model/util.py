@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
 PLATE_DIR = os.path.join(PATH, 'media', 'plates')
+TEST_PATH = os.path.join(PATH, 'media', 'test_set')
 MODEL_PATH = os.path.join(PATH, 'src', 'model')
 
 VALIDATION_SPLIT = 0.2
@@ -58,8 +59,8 @@ def process_plate(my_file):
     return imgs, vecs
 
 
-# Return the datasets associated with the processed plates and their one-hot vectors
-def get_dataset():
+# Training datasets associated with the processed plates and their one-hot vectors
+def get_training_dataset():
     plates = files_in_folder(PLATE_DIR)
 
     X_images = []
@@ -74,6 +75,49 @@ def get_dataset():
     Y_dataset = np.array(Y_labels)
 
     return X_dataset, Y_dataset
+
+
+# Returns 4 partitions of the license plate in the homographic image
+def process_homographic_plate(my_file):
+    img_path = os.path.join(TEST_PATH, my_file)
+    img = cv2.imread(img_path) # (150,196,3)
+    img_upscaled = cv2.resize(img, (600,600))
+
+    # plate
+    plate = np.array(img_upscaled)[430:550, 70:450]
+
+    char1 = plate[40:90,35:95]
+    char2 = plate[40:90,95:165]
+    char3 = plate[35:90,220:280]
+    char4 = plate[35:90,280:350]
+
+    plt.imshow(plate)
+    plt.show()
+
+    plt.imshow(char1)
+    plt.show()
+
+    plt.imshow(char2)
+    plt.show()
+
+    plt.imshow(char3)
+    plt.show()
+
+    plt.imshow(char4)
+    plt.show()
+
+
+
+# Gets the testing dataset
+def get_test_dataset():
+    plates = files_in_folder(TEST_PATH)
+
+    X_images = []
+    Y_labels = []
+
+    for p in plates:
+        imgs = process_homographic_plate(p)
+
 
 
 # Prints info about datasets
@@ -95,3 +139,6 @@ def add_noise(img):
     img += noise
     np.clip(img, 0., 255.)
     return img
+
+if __name__ == '__main__':
+    get_test_dataset()
