@@ -67,12 +67,12 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
             rotation_range=20,
             zoom_range=0.2,
             preprocessing_function=util.add_noise,
-            brightness_range=[0.1,1.1],
+            brightness_range=[0.2,1.1],
             validation_split=vs
         )
 
         print("Visualizing IDG.")
-        visualize_idg(aug, X_dataset)
+        #visualize_idg(aug, X_dataset)
 
         print("Creating augmented datasets.")
 
@@ -195,7 +195,7 @@ def main():
 
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 250
+    EPOCHS = 400
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)

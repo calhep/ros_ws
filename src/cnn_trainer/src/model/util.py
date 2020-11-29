@@ -144,7 +144,7 @@ def add_noise(img):
     noise = np.random.normal(0, deviation, img.shape)
     img += noise
 
-    img = uniform_filter(img,size=(35,35,1))
+    img = uniform_filter(img,size=(27,27,1))
     np.clip(img, 0., 255.)
     return img
 
