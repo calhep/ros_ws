@@ -62,12 +62,16 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
         print("Augmenting data.")
 
         aug = ImageDataGenerator(
-            shear_range=0.15,
-            rotation_range=10,
-            zoom_range=0.10,
+            shear_range=0.75,
+            rotation_range=35,
+            zoom_range=0.4,
             preprocessing_function=util.add_noise,
+            brightness_range=[0.3,1.3],
             validation_split=vs
         )
+
+        print("Visualizing IDG.")
+       # visualize_idg(aug, X_dataset * 255)
 
         print("Creating augmented datasets.")
 
@@ -114,6 +118,23 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
     return model
 
 
+# Visualize the output from the ImageDataGenerator. This can probably be 
+def visualize_idg(aug, X_dataset):
+    for data in X_dataset:
+        sample = np.expand_dims(data,0)
+        it = aug.flow(sample, batch_size=1)
+        
+        plt.subplot(331)
+
+        # generate batch
+        batch = it.next()
+
+        # convert to uint8
+        image = batch[0].astype('uint8')
+        plt.imshow(image)
+        plt.show()
+
+
 # Predict a plate using a model
 def predict_plate(plate, model):
     imgs, vecs = util.process_plate(plate)
@@ -144,11 +165,11 @@ def main():
     NEW_MODEL = True
     PREDICT = True
     AUGMENT = True
-    USE_TEST_DATASET = False
+    USE_TEST_DATASET = False # not in use rn
 
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 5
+    EPOCHS = 20
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
