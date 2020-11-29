@@ -118,16 +118,18 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
     return model
 
 
-# Visualize the output from the ImageDataGenerator
+# Visualize the output from the ImageDataGenerator. This can probably be 
 def visualize_idg(aug, X_dataset):
     for data in X_dataset:
         sample = np.expand_dims(data,0)
         it = aug.flow(sample, batch_size=1)
         
         plt.subplot(331)
-        #generate batch
+
+        # generate batch
         batch = it.next()
-        #convert to uint8
+
+        # convert to uint8
         image = batch[0].astype('uint8')
         plt.imshow(image)
         plt.show()
@@ -167,7 +169,7 @@ def main():
 
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 1
+    EPOCHS = 20
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
