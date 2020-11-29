@@ -56,6 +56,10 @@ def process_plate(my_file):
     for i in range(4):
         vecs.append(one_hot(my_file[6+i]))
 
+    for c in imgs:
+        plt.imshow(c)
+        plt.show()
+
     return imgs, vecs
 
 
@@ -81,44 +85,29 @@ def get_training_dataset():
 def process_homographic_plate(my_file):
     img_path = os.path.join(TEST_PATH, my_file)
     img = cv2.imread(img_path) # (150,196,3)
-    img_upscaled = cv2.resize(img, (600,600))
+    h, w, _ = img.shape
+    img_upscaled = cv2.resize(img, (3*h,3*w)) # 588, 450, 3
 
-    # plate
-    plate = np.array(img_upscaled)[445:550, 70:450]
+    char1 = cv2.resize(img_upscaled[430:535,75:130], (105,300))
+    char2 = cv2.resize(img_upscaled[430:535,120:180], (105,300))
+    char3 = cv2.resize(img_upscaled[430:535,216:269], (105,300))
+    char4 = cv2.resize(img_upscaled[430:535,260:317], (105,300))
 
-    char1 = plate[:,35:100]
-    char2 = plate[:,95:165]
-    char3 = plate[:,220:290]
-    char4 = plate[:,280:350]
+    chars = [char1, char2, char3, char4]
 
+    # for c in chars:
+    #     plt.imshow(c)
+    #     plt.show()
     print(char1.shape)
-    plt.imshow(plate)
-    plt.show()
-    plt.imshow(char1)
-    plt.show()
-    # plt.imshow(char2)
-    # plt.show()
-    # plt.imshow(char3)
-    # plt.show()
-    # plt.imshow(char4)
-    # plt.show()
-
-    char1 = np.reshape(char1,(300,105))
-    plt.imshow(char1)
-    plt.show()
-
+    return chars
 
 
 # Gets the testing dataset
 def get_test_dataset():
+    # TODO: make this a workflow
     plates = files_in_folder(TEST_PATH)
 
-    X_images = []
-    Y_labels = []
-
-    for p in plates:
-        imgs = process_homographic_plate(p)
-
+    test = []
 
 
 # Prints info about datasets

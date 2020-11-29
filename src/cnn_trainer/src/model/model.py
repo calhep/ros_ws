@@ -139,11 +139,14 @@ def visualize_idg(aug, X_dataset):
 def predict_plate(plate, model):
     imgs, vecs = util.process_plate(plate)
     dataset = np.array(imgs) / 255
+    print(len(dataset))
 
     chars = []
     true = []
 
     for i in range(4):
+        plt.imshow(dataset[i] * 255)
+        plt.show()
         image = np.expand_dims(dataset[i], axis=0)
 
         y_true = vecs[i]
@@ -160,8 +163,25 @@ def predict_plate(plate, model):
 
 
 # Predict the plates in the test set
-def predict_test_set():
-    return
+def predict_test_set(plate, model):
+    imgs = util.process_homographic_plate(plate)
+    dataset = np.array(imgs) / 255
+    print(len(dataset))
+
+    chars = []
+
+    for i in range(4):
+        plt.imshow(dataset[i] * 255)
+        plt.show()
+        image = np.expand_dims(dataset[i], axis=0)
+
+        y_predicted = model.predict(image)[0]
+        index_predicted = np.argmax(y_predicted)
+
+        chars.append(util.index_to_val(index_predicted))
+
+    print("Actual:", plate) 
+    print("Predicted:", chars) 
 
 
 def main():
@@ -195,9 +215,13 @@ def main():
     # Predict a plate if specified
     if PREDICT:
         plates = util.files_in_folder(util.PLATE_DIR)
-        plate_to_test = plates[34]
+        plate_to_test = plates[16]
         print("Testing ", plate_to_test)
         predict_plate(plate_to_test, model)
+
+        print("Testing from test set")
+        test_plate = util.files_in_folder(util.TEST_PATH)[0]
+        predict_test_set(test_plate, model)
 
 
 if __name__ == '__main__':
