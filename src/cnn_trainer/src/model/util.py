@@ -76,8 +76,12 @@ def get_training_dataset():
         X_images.extend(imgs)
         Y_labels.extend(vecs)
 
-    X_dataset = np.array(X_images) / 255  # normalize the data
+    X_dataset = np.array(X_images)
     Y_dataset = np.array(Y_labels)
+
+    # for c in X_dataset:
+    #     plt.imshow(c)
+    #     plt.show()
 
     return X_dataset, Y_dataset
 
@@ -98,16 +102,18 @@ def process_homographic_plate(my_file):
     lower_red = np.array([0,130,0])
     upper_red = np.array([255,255,225])
 
+    #TODO: figure out a way to get rid of black
     def mask(x):
         hsv = cv2.cvtColor(x,cv2.COLOR_BGR2HSV)
         red_mask = cv2.inRange(hsv,lower_red,upper_red)
-        return cv2.bitwise_and(x,x,mask=red_mask)
+        anded = cv2.bitwise_and(x,x,mask=red_mask)
+        return x
 
     chars = [mask(char1), mask(char2), mask(char3), mask(char4)]
 
-    for c in chars:
-        plt.imshow(c)
-        plt.show()
+    # for c in chars:
+    #     plt.imshow(c)
+    #     plt.show()
 
     return chars
 
