@@ -8,9 +8,10 @@ import sys
 import cv2
 import numpy as np
 
-import homography as hm
+# import homography as hm
 import callback_handling as ch
 
+from homography import Homography
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
@@ -27,9 +28,9 @@ class ImageConverter:
         self.prev_com = (640, 360)
         self.rm = rm
   
-        self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/plate_{}.png'.format(x + 1) for x in range(8)]
-        self.plate_num = 0
-        self.hm = hm.Homography(self.image_paths)
+        # self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/plate_{}.png'.format(x + 1) for x in range(8)]
+        # self.plate_num = 0
+        # self.hm = hm.Homography(self.image_paths)
 
     def callback(self, image):
         try:
@@ -56,7 +57,7 @@ class ImageConverter:
         elif 120 <= x and x <= 235:
             self.rm.move_robot(x=0.125, z=0)
         else:
-            self.rm.move_robot(x=0., z=-.45)
+            self.rm.move_robot(x=0.0, z=-.45)
 
 
 class RobotMovement:
@@ -122,6 +123,7 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
+    hm = Homography()
     
     rospy.sleep(600)
 
