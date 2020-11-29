@@ -63,11 +63,11 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
         print("Augmenting data.")
 
         aug = ImageDataGenerator(
-            shear_range=0.70,
+            shear_range=0.65,
             rotation_range=20,
-            zoom_range=0.2,
+            zoom_range=0.12,
             preprocessing_function=util.add_noise,
-            brightness_range=[0.2,1.1],
+            brightness_range=[0.15,1.1],
             validation_split=vs
         )
 
@@ -125,8 +125,6 @@ def visualize_idg(aug, X_dataset):
         sample = np.expand_dims(data,0)
         it = aug.flow(sample, batch_size=1)
         
-        plt.subplot(331)
-
         # generate batch
         batch = it.next()
 
@@ -188,7 +186,7 @@ def predict_test_set(plate, model):
 def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
-    NEW_MODEL = False
+    NEW_MODEL = True
     PREDICT = True
     AUGMENT = True
     USE_TEST_DATASET = False # not in use rn
@@ -198,7 +196,7 @@ def main():
 
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 100
+    EPOCHS = 5
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, plate_model=PLATE_MODEL, new=NEW_MODEL)
@@ -229,7 +227,7 @@ def main():
             print("Testing from test set")
             test_plates = util.files_in_folder(util.TEST_PATH)
             for p in test_plates:
-            predict_test_set(p, model)
+                predict_test_set(p, model)
 
 
 if __name__ == '__main__':
