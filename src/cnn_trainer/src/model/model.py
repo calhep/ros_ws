@@ -43,7 +43,7 @@ def generate_model(lr):
 
 
 # Get a model either by generating a new one or load from local
-def get_model(lr=1e-4, new=False):  
+def get_model(lr=1e-4, plate_model=True, new=False):  
 
     if new:
         print("compiling new model")
@@ -193,36 +193,43 @@ def main():
     AUGMENT = True
     USE_TEST_DATASET = False # not in use rn
 
+    # select with model
+    PLATE_MODEL = True
+
     LEARNING_RATE = 1e-4
     VALIDATION_SPLIT = 0.2
-    EPOCHS = 400
+    EPOCHS = 100
 
     # Generate model or retrieve model
-    model = get_model(lr=LEARNING_RATE, new=NEW_MODEL)
+    model = get_model(lr=LEARNING_RATE, plate_model=PLATE_MODEL, new=NEW_MODEL)
 
-    # If specified, train the model against training/validation data, always train if it's a new model.
-    if TRAIN or NEW_MODEL:
-        X_dataset, Y_dataset = util.get_training_dataset() 
+    # This corresponds to the model for plates
+    if PLATE_MODEL:
+        # If specified, train the model against training/validation data, always train if it's a new model.
+        if TRAIN or NEW_MODEL:
+            X_dataset, Y_dataset = util.get_training_dataset() 
 
-        model = train_model(model,
-            X_dataset,
-            Y_dataset,
-            VALIDATION_SPLIT,
-            EPOCHS,
-            augment=AUGMENT)
+            model = train_model(model,
+                X_dataset,
+                Y_dataset,
+                VALIDATION_SPLIT,
+                EPOCHS,
+                augment=AUGMENT)
 
-        save_model(model)
+            save_model(model)
 
-    # Predict a plate if specified
-    if PREDICT:
-        plates = util.files_in_folder(util.PLATE_DIR)
-        plate_to_test = plates[16]
-        print("Testing ", plate_to_test)
-        predict_plate(plate_to_test, model)
+        # Predict a plate if specified
+        if PREDICT:
+            plates = util.files_in_folder(util.PLATE_DIR)
+            plate_to_test = plates[16]
+            print("Testing ", plate_to_test)
+            predict_plate(plate_to_test, model)
 
-        print("Testing from test set")
-        test_plate = util.files_in_folder(util.TEST_PATH)[0]
-        predict_test_set(test_plate, model)
+            # Predict from test set
+            print("Testing from test set")
+            test_plates = util.files_in_folder(util.TEST_PATH)
+            for p in test_plates:
+            predict_test_set(p, model)
 
 
 if __name__ == '__main__':
