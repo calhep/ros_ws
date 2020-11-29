@@ -45,7 +45,7 @@ def process_plate(my_file):
     plate_path = os.path.join(PLATE_DIR, my_file)
     plate_img = cv2.imread(plate_path)
     
-    # crop into subsections (x dataset)
+    # crop into subsections (x dataset) shape is (300,105,0)
     img1 = plate_img[49:349,45:150]
     img2 = plate_img[49:349,145:250]
     img3 = plate_img[49:349,347:452]
@@ -84,26 +84,27 @@ def process_homographic_plate(my_file):
     img_upscaled = cv2.resize(img, (600,600))
 
     # plate
-    plate = np.array(img_upscaled)[430:550, 70:450]
+    plate = np.array(img_upscaled)[445:550, 70:450]
 
-    char1 = plate[40:90,35:95]
-    char2 = plate[40:90,95:165]
-    char3 = plate[35:90,220:280]
-    char4 = plate[35:90,280:350]
+    char1 = plate[:,35:100]
+    char2 = plate[:,95:165]
+    char3 = plate[:,220:290]
+    char4 = plate[:,280:350]
 
+    print(char1.shape)
     plt.imshow(plate)
     plt.show()
-
     plt.imshow(char1)
     plt.show()
+    # plt.imshow(char2)
+    # plt.show()
+    # plt.imshow(char3)
+    # plt.show()
+    # plt.imshow(char4)
+    # plt.show()
 
-    plt.imshow(char2)
-    plt.show()
-
-    plt.imshow(char3)
-    plt.show()
-
-    plt.imshow(char4)
+    char1 = np.reshape(char1,(300,105))
+    plt.imshow(char1)
     plt.show()
 
 
