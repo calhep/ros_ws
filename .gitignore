@@ -4,3 +4,5 @@ devel/*
 src/cnn_trainer/src/model/keras/*
 *.png
 .vscode/
+src/mcqueen_controller/src/media/*
+
