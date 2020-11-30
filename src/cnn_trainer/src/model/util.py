@@ -61,7 +61,7 @@ def process_plate(my_file):
     #     plt.imshow(c)
     #     plt.show()
 
-    return imgs, vecs
+    return imgs, vecs 
 
 
 # Training datasets associated with the processed plates and their one-hot vectors
@@ -83,7 +83,7 @@ def get_training_dataset():
     #     plt.imshow(c)
     #     plt.show()
 
-    return X_dataset, Y_dataset
+    return X_dataset, Y_dataset # Returning the raw partitions.
 
 
 # Returns 4 partitions of the license plate in the homographic image
@@ -102,7 +102,7 @@ def process_homographic_plate(my_file):
     lower_red = np.array([0,130,0])
     upper_red = np.array([255,255,225])
 
-    #TODO: figure out a way to get rid of black
+    # TODO: not doing anything currently, we are just returning the raw partitions.
     def mask(x):
         hsv = cv2.cvtColor(x,cv2.COLOR_BGR2HSV)
         red_mask = cv2.inRange(hsv,lower_red,upper_red)
