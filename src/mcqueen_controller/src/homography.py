@@ -9,7 +9,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
 
-MIN_MATCHES = 20
+MIN_MATCHES = 14
 
 class Homography():
 
@@ -22,29 +22,29 @@ class Homography():
         self.image_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in self.template_paths]
         self.kp_desc_images = [(lambda x: self.sift.detectAndCompute(x, None))(x) for x in self.image_templates]
 
-        self.test_image = cv2.imread('/home/fizzer/Pictures/default_car.png', cv2.IMREAD_GRAYSCALE)
+        self.test_image = cv2.imread('/home/fizzer/Pictures/default_car2.png', cv2.IMREAD_GRAYSCALE)
         # w,h = self.test_image.shape 
         # self.test_image = cv2.resize(self.test_image,(int(.1*h),int(.1*w)))
         self.kp_desc_image = self.sift.detectAndCompute(self.test_image, None)
 
         self.index_params = {'algorithm':0, 'trees':5}
-        self.search_params = {'checks': 5}
+        self.search_params = {}
         self.flann = cv2.FlannBasedMatcher(self.index_params, self.search_params)
 
         self.plate_num = 0
-        
-
-    def callback(self, image):
-        print("bruh")
+    
+    def generate_keypoints(self, image):
         grayframe = self.bridge.imgmsg_to_cv2(image, 'mono8')
         # grayframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # trainimage
-        # grayframe = grayframe[:720,:320] # Originally 1280 x 720
+        grayframe = grayframe[300:720,:640] # Originally 1280 x 720
+        reference = grayframe
         w,h = grayframe.shape 
 
-        grayframe = cv2.resize(grayframe,(int(.1*h),int(.1*w))) # 320 x 180
+        grayframe = cv2.resize(grayframe,(int(0.5*h),int(0.5*w))) # 320 x 180
 
-        # cv2.imshow('ga', self.test_image)
-        # cv2.waitKey(3)
+        cv2.imshow('ga', self.image_templates[self.plate_num])
+        cv2.imshow('uwu', grayframe)
+        cv2.waitKey(3)
 
         # generate keypoints and descriptors
         kp_image, desc_image = self.kp_desc_images[self.plate_num]
@@ -63,13 +63,14 @@ class Homography():
 
             # Perspective transform
             h, w = self.image_templates[self.plate_num].shape
-            pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
-            dst = cv2.perspectiveTransform(pts, matrix)
+            # pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
+            # dst = cv2.perspectiveTransform(pts, matrix)
 
-            # cv2.imshow('gyuh', cv2.warpPerspective(grayframe, matrix, (w, h)))
-            # cv2.waitKey(3)
+            cv2.imshow('gyuh', cv2.warpPerspective(grayframe, matrix, (w, h)))
+            cv2.waitKey(3)
+            # cv2.imshow('gyuh', grayframe)
             print(len(good_points))
-            cv2.imshow('gyuh',cv2.polylines(image, [np.int32(dst)], True, (255, 0, 0), 3))
+            # cv2.imshow('gyuh',cv2.polylines(grayframe, [np.int32(dst)], True, (255, 0, 0), 3))
 
             self.plate_num += 1
             
@@ -78,3 +79,6 @@ class Homography():
 
         else:
             print("Too few valid keypoints found: {}/{}".format(len(good_points), MIN_MATCHES))
+
+    def callback(self, image):
+        self.generate_keypoints(image)
