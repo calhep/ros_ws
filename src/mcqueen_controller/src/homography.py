@@ -21,8 +21,8 @@ class Homography():
         self.image_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in self.template_paths]
         self.kp_desc_images = [(lambda x: self.sift.detectAndCompute(x, None))(x) for x in self.image_templates]
 
-        self.index_params = dict(algorithm=0, trees=5)
-        self.search_params = dict(checks=5)
+        self.index_params = {'algorithm':0, 'trees':5}
+        self.search_params = {'checks': 5}
         self.flann = cv2.FlannBasedMatcher(self.index_params, self.search_params)
 
         self.plate_num = 0

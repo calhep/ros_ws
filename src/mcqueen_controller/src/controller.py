@@ -8,7 +8,7 @@ import sys
 import cv2
 import numpy as np
 
-# import homography as hm
+import homography as hm
 import callback_handling as ch
 
 from homography import Homography
@@ -28,9 +28,8 @@ class ImageConverter:
         self.prev_com = (640, 360)
         self.rm = rm
   
-        # self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/plate_{}.png'.format(x + 1) for x in range(8)]
-        # self.plate_num = 0
-        # self.hm = hm.Homography(self.image_paths)
+        self.plate_num = 0
+        #self.hm = hm.Homography()
 
     def callback(self, image):
         try:
@@ -43,21 +42,21 @@ class ImageConverter:
         #     self.plate_num += 1
 
         # If the red bar of crosswalk is detected, check for pedestrian
-        if ch.is_at_crosswalk(colored_img):
-            self.rm.stop_robot()
-            rospy.sleep(5)
-            # TODO: Manual control of robot here based on homography/color masking of pedestrians
-            self.rm.move_robot(x=0.05)
+        # if ch.is_at_crosswalk(colored_img):
+        #     self.rm.stop_robot()
+        #     rospy.sleep(5)
+        #     # TODO: Manual control of robot here based on homography/color masking of pedestrians
+        #     self.rm.move_robot(x=0.05)
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[650:,900:], self.prev_com)
 
         # Control conditions
         if x < 120:
-            self.rm.move_robot(x=0.0, z=.45)
+            self.rm.move_robot(x=0.075, z=1)
         elif 120 <= x and x <= 235:
-            self.rm.move_robot(x=0.125, z=0)
+            self.rm.move_robot(x=0.3, z=0)
         else:
-            self.rm.move_robot(x=0.0, z=-.45)
+            self.rm.move_robot(x=0.075, z=-1)
 
 
 class RobotMovement:
@@ -123,7 +122,7 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
-    hm = Homography()
+    #hm = Homography()
     
     rospy.sleep(600)
 
