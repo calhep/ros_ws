@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 
-import numpy as np
-import cv2
 import rospy
+import sys
+import cv2
+import numpy as np
 
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
@@ -14,12 +15,17 @@ class Homography():
 
     def __init__(self):
         self.sift = cv2.xfeatures2d.SIFT_create()
-        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
+        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
         self.bridge = CvBridge()
 
         self.template_paths = self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/plate_{}.png'.format(x + 1) for x in range(8)]
         self.image_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in self.template_paths]
         self.kp_desc_images = [(lambda x: self.sift.detectAndCompute(x, None))(x) for x in self.image_templates]
+
+        self.test_image = cv2.imread('/home/fizzer/Pictures/default_car.png', cv2.IMREAD_GRAYSCALE)
+        # w,h = self.test_image.shape 
+        # self.test_image = cv2.resize(self.test_image,(int(.1*h),int(.1*w)))
+        self.kp_desc_image = self.sift.detectAndCompute(self.test_image, None)
 
         self.index_params = {'algorithm':0, 'trees':5}
         self.search_params = {'checks': 5}
@@ -29,21 +35,25 @@ class Homography():
         
 
     def callback(self, image):
+        print("bruh")
         grayframe = self.bridge.imgmsg_to_cv2(image, 'mono8')
         # grayframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # trainimage
-        w,h=grayframe.shape # 1280 x 720
-        grayframe = cv2.resize(grayframe,(int(.25*w),int(.25*h))) # 320 x 180
-        grayframe = grayframe[90:150,:107]
-        cv2.imshow('ga',grayframe)
-        cv2.waitKey(3)
+        # grayframe = grayframe[:720,:320] # Originally 1280 x 720
+        w,h = grayframe.shape 
+
+        grayframe = cv2.resize(grayframe,(int(.1*h),int(.1*w))) # 320 x 180
+
+        # cv2.imshow('ga', self.test_image)
+        # cv2.waitKey(3)
 
         # generate keypoints and descriptors
         kp_image, desc_image = self.kp_desc_images[self.plate_num]
+        kp_image, desc_image = self.kp_desc_image
         kp_grayframe, desc_grayframe = self.sift.detectAndCompute(grayframe, None)
 
         # Feature matching
         matches = self.flann.knnMatch(desc_image, desc_grayframe, k=2)
-        good_points = [m for m, n in matches if m.distance < 0.7*n.distance]
+        good_points = [m for m, n in matches if m.distance < 0.6*n.distance]
 
         if len(good_points) >= MIN_MATCHES:
             query_pts = np.float32([kp_image[m.queryIdx].pt for m in good_points]).reshape(-1, 1, 2)
@@ -53,13 +63,13 @@ class Homography():
 
             # Perspective transform
             h, w = self.image_templates[self.plate_num].shape
-            # pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
-            # dst = cv2.perspectiveTransform(pts, matrix)
+            pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
+            dst = cv2.perspectiveTransform(pts, matrix)
 
-            cv2.imshow('gyuh', cv2.warpPerspective(grayframe, matrix, (w, h)))
-            cv2.waitKey(3)
+            # cv2.imshow('gyuh', cv2.warpPerspective(grayframe, matrix, (w, h)))
+            # cv2.waitKey(3)
             print(len(good_points))
-            # return cv2.polylines(frame, [np.int32(dst)], True, (255, 0, 0), 3)
+            cv2.imshow('gyuh',cv2.polylines(image, [np.int32(dst)], True, (255, 0, 0), 3))
 
             self.plate_num += 1
             
@@ -68,5 +78,3 @@ class Homography():
 
         else:
             print("Too few valid keypoints found: {}/{}".format(len(good_points), MIN_MATCHES))
-        
-        rospy.sleep(0.5)

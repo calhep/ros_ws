@@ -24,7 +24,7 @@ class ImageConverter:
 
     def __init__(self, rm):
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
+        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
         self.prev_com = (640, 360)
         self.rm = rm
   
@@ -37,6 +37,8 @@ class ImageConverter:
             colored_img = self.bridge.imgmsg_to_cv2(image, 'bgr8')
         except CvBridgeError as e:
             print(e)
+        
+        print('bro')
 
         # if self.hm.detect_features(grayscale_img, self.plate_num):
         #     self.plate_num += 1
@@ -49,20 +51,17 @@ class ImageConverter:
         #     self.rm.move_robot(x=0.05)
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
-        displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
-        cv2.imshow('g',displayed_img)
-        cv2.waitKey(3)
+        # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
+        # cv2.imshow('g',displayed_img)
+        # cv2.waitKey(3)
 
         # Control conditions
         if x < 120:
-            print("left")
             self.rm.move_robot(x=0.1, z=0.9)
         elif 120 <= x and x <= 245:
-            print("forward")
             self.rm.move_robot(x=0.3, z=0)
         else:
-            print("right")
-            self.rm.move_robot(x=0.1, z=-.9)
+            self.rm.move_robot(x=0.1, z=-0.9)
 
 
 class RobotMovement:
