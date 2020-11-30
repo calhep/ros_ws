@@ -59,7 +59,7 @@ class ImageConverter:
         elif x > 250:
             self.rm.move_robot(x=0.05, z=-0.7)
         else:
-            self.rm.move_robot(x=0.2, z=0)
+            self.rm.move_robot(x=0.15, z=0)
             
 
 

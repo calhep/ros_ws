@@ -9,7 +9,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
 
-MIN_MATCHES = 18
+MIN_MATCHES = 15
 
 class Homography():
 
@@ -18,7 +18,7 @@ class Homography():
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
         self.bridge = CvBridge()
 
-        self.template_paths = self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/plate_{}.png'.format(x + 1) for x in range(8)]
+        self.template_paths = self.image_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/media/New/p{}.png'.format(x + 1) for x in range(6)]
         self.image_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in self.template_paths]
         self.kp_desc_images = [(lambda x: self.sift.detectAndCompute(x, None))(x) for x in self.image_templates]
 
@@ -30,10 +30,10 @@ class Homography():
     
     def generate_keypoints(self, image):
         grayframe = self.bridge.imgmsg_to_cv2(image, 'mono8')
-        grayframe = grayframe[300:,:500] # Originally 1280 x 720
+        grayframe = grayframe[300:-100,100:500] # Originally 1280 x 720
         w,h = grayframe.shape 
 
-        grayframe = cv2.resize(grayframe,(int(0.7*h),int(0.7*w))) # 320 x 180
+        grayframe = cv2.resize(grayframe,(int(1*h),int(1*w))) # 320 x 180
 
         cv2.imshow('ga', self.image_templates[self.plate_num])
         cv2.imshow('uwu', grayframe)
@@ -63,7 +63,7 @@ class Homography():
             cv2.waitKey(3)
             print(len(good_points))
             # cv2.imshow('gyuh',cv2.polylines(grayframe, [np.int32(dst)], True, (255, 0, 0), 3))
-
+            rospy.sleep(2)
             self.plate_num += 1
             
         # if len(good_points) > 0:
