@@ -31,7 +31,7 @@ class Homography():
     def callback(self, image):
         grayframe = self.bridge.imgmsg_to_cv2(image, 'mono8')
         # grayframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # trainimage
-        h, w, _ = grayframe.shape
+        w,h=grayframe.shape
         grayframe = cv2.resize(grayframe,(int(.5*w),int(.5*h)))
 
         # generate keypoints and descriptors

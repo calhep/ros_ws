@@ -121,7 +121,7 @@ def main(args):
     # # start movin bruh
     rospy.sleep(1)
     rm.init()
-    #ic = ImageConverter(rm)
+    ic = ImageConverter(rm)
     hm = Homography()
     
     rospy.sleep(600)
