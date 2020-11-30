@@ -59,6 +59,9 @@ def get_model(lr=1e-4, plate_model=True, new=False):
 
 def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
 
+    print(X_dataset.shape)
+    print(Y_dataset.shape)
+
     if augment:
         print("Augmenting data.")
 

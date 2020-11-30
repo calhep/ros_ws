@@ -25,8 +25,16 @@ def car_one_hot(num):
     vecs[num-1] = 1
     return vecs
 
+
+def process_car_pic(my_file):
+    pic_path = os.path.join(CAR_PATH, my_file)
+    img = cv2.imread(pic_path)
+    resized_img = cv2.resize(img,(100,150)) # w,h
+    return resized_img[60:100]
+
+
 # gets and crops car pics
-def process_car_pics():
+def get_car_datasets():
     files = util.files_in_folder(CAR_PATH)
 
     pics = []
@@ -34,10 +42,8 @@ def process_car_pics():
 
     # resize and crop to p_
     for f in files:
-        pic_path = os.path.join(CAR_PATH, f)
-        img = cv2.imread(pic_path)
-        resized_img = cv2.resize(img,(100,150)) # w,h
-        pics.append(resized_img[60:100,:])
+        processed_pic = process_car_pic(f)
+        pics.append(processed_pic)
         print(f[0])
         vecs.append(car_one_hot(int(f[0])))
 
@@ -57,7 +63,7 @@ def load_car_model():
 # generate model for car
 def generate_car_model(lr):
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(150, 100, 3)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(40, 100, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -79,10 +85,10 @@ def get_car_model(lr=1e-4, new=False):
 
     if new:
         print("compiling new model")
-        model = generate_model(lr)
+        model = generate_car_model(lr)
     else:
         print("Loading local model")
-        model = load_model()
+        model = load_car_model()
 
     model.summary()
 
@@ -91,6 +97,8 @@ def get_car_model(lr=1e-4, new=False):
 
 # TODO: Implement idg and train network
 def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
+    # print(X_dataset.shape)
+    # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
         shear_range=0.3,
@@ -154,16 +162,22 @@ def visualize_idg(aug, X_dataset):
 
 
 # predict the car
-def predict_car(img):
-    return
+def predict_car(model, my_file):
+    print("actual: ", my_file)
+    pic = process_car_pic(file)
+    image = np.expand_dims(pic,axis=0)
+    predicted_car = model.predict(image)[0]
+    print("predicted: ", predicted_car)
 
 
 def main():
-    imgs, vecs = process_car_pics()
+    NEW_MODEL = True
+
+    imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
     Y_dataset = np.array(vecs)
 
-    model = get_car_model(lr=1e-4,new=True)
+    model = get_car_model(lr=1e-4,new=NEW_MODEL)
 
     model = train_car_model(model,
         X_dataset,
