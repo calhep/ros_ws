@@ -3,4 +3,3 @@ build/*
 devel/*
 src/cnn_trainer/src/model/keras/*
 .vscode/
-
