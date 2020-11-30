@@ -30,7 +30,7 @@ class Homography():
     
     def generate_keypoints(self, image):
         grayframe = self.bridge.imgmsg_to_cv2(image, 'mono8')
-        grayframe = grayframe[300:-100,100:500] # Originally 1280 x 720
+        grayframe = grayframe[300:-100,:250] # Originally 1280 x 720
         w,h = grayframe.shape 
 
         grayframe = cv2.resize(grayframe,(int(1*h),int(1*w))) # 320 x 180
@@ -63,7 +63,7 @@ class Homography():
             cv2.waitKey(3)
             print(len(good_points))
             # cv2.imshow('gyuh',cv2.polylines(grayframe, [np.int32(dst)], True, (255, 0, 0), 3))
-            rospy.sleep(2)
+            rospy.sleep(1.75)
             self.plate_num += 1
             
         # if len(good_points) > 0:
