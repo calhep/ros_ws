@@ -37,8 +37,6 @@ class ImageConverter:
             colored_img = self.bridge.imgmsg_to_cv2(image, 'bgr8')
         except CvBridgeError as e:
             print(e)
-        
-        print('bro')
 
         # if self.hm.detect_features(grayscale_img, self.plate_num):
         #     self.plate_num += 1
@@ -56,12 +54,13 @@ class ImageConverter:
         # cv2.waitKey(3)
 
         # Control conditions
-        if x < 120:
-            self.rm.move_robot(x=0.1, z=0.9)
-        elif 120 <= x and x <= 245:
-            self.rm.move_robot(x=0.3, z=0)
+        if x < 220:
+            self.rm.move_robot(x=0.05, z=0.7)
+        elif x > 250:
+            self.rm.move_robot(x=0.05, z=-0.7)
         else:
-            self.rm.move_robot(x=0.1, z=-0.9)
+            self.rm.move_robot(x=0.2, z=0)
+            
 
 
 class RobotMovement:

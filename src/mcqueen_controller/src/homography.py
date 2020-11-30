@@ -9,7 +9,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
 
-MIN_MATCHES = 14
+MIN_MATCHES = 18
 
 class Homography():
 
@@ -22,11 +22,6 @@ class Homography():
         self.image_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in self.template_paths]
         self.kp_desc_images = [(lambda x: self.sift.detectAndCompute(x, None))(x) for x in self.image_templates]
 
-        self.test_image = cv2.imread('/home/fizzer/Pictures/default_car2.png', cv2.IMREAD_GRAYSCALE)
-        # w,h = self.test_image.shape 
-        # self.test_image = cv2.resize(self.test_image,(int(.1*h),int(.1*w)))
-        self.kp_desc_image = self.sift.detectAndCompute(self.test_image, None)
-
         self.index_params = {'algorithm':0, 'trees':5}
         self.search_params = {}
         self.flann = cv2.FlannBasedMatcher(self.index_params, self.search_params)
@@ -35,12 +30,10 @@ class Homography():
     
     def generate_keypoints(self, image):
         grayframe = self.bridge.imgmsg_to_cv2(image, 'mono8')
-        # grayframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # trainimage
-        grayframe = grayframe[300:720,:640] # Originally 1280 x 720
-        reference = grayframe
+        grayframe = grayframe[300:,:500] # Originally 1280 x 720
         w,h = grayframe.shape 
 
-        grayframe = cv2.resize(grayframe,(int(0.5*h),int(0.5*w))) # 320 x 180
+        grayframe = cv2.resize(grayframe,(int(0.7*h),int(0.7*w))) # 320 x 180
 
         cv2.imshow('ga', self.image_templates[self.plate_num])
         cv2.imshow('uwu', grayframe)
@@ -48,7 +41,7 @@ class Homography():
 
         # generate keypoints and descriptors
         kp_image, desc_image = self.kp_desc_images[self.plate_num]
-        kp_image, desc_image = self.kp_desc_image
+        # kp_image, desc_image = self.kp_desc_image
         kp_grayframe, desc_grayframe = self.sift.detectAndCompute(grayframe, None)
 
         # Feature matching
@@ -68,7 +61,6 @@ class Homography():
 
             cv2.imshow('gyuh', cv2.warpPerspective(grayframe, matrix, (w, h)))
             cv2.waitKey(3)
-            # cv2.imshow('gyuh', grayframe)
             print(len(good_points))
             # cv2.imshow('gyuh',cv2.polylines(grayframe, [np.int32(dst)], True, (255, 0, 0), 3))
 
