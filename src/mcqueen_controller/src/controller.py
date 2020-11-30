@@ -128,7 +128,7 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
-    #hm = Homography()
+    hm = Homography()
     
     rospy.sleep(600)
 

@@ -31,8 +31,11 @@ class Homography():
     def callback(self, image):
         grayframe = self.bridge.imgmsg_to_cv2(image, 'mono8')
         # grayframe = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # trainimage
-        w,h=grayframe.shape
-        grayframe = cv2.resize(grayframe,(int(.5*w),int(.5*h)))
+        w,h=grayframe.shape # 1280 x 720
+        grayframe = cv2.resize(grayframe,(int(.25*w),int(.25*h))) # 320 x 180
+        grayframe = grayframe[90:150,:107]
+        cv2.imshow('ga',grayframe)
+        cv2.waitKey(3)
 
         # generate keypoints and descriptors
         kp_image, desc_image = self.kp_desc_images[self.plate_num]
