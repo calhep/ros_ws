@@ -2,9 +2,10 @@ import numpy as np
 import tensorflow as tf
 import os
 import cv2
-from matplotlib import pyplot as plt
+import random
 
 from matplotlib import pyplot as plt
+from scipy.ndimage.filters import uniform_filter
 from tensorflow.python.keras import layers
 from tensorflow.python.keras import models
 from tensorflow.python.keras import optimizers
@@ -26,8 +27,10 @@ def car_one_hot(num):
     return vecs
 
 
+# process car pic
 def process_car_pic(my_file):
     pic_path = os.path.join(CAR_PATH, my_file)
+    print(pic_path)
     img = cv2.imread(pic_path)
     resized_img = cv2.resize(img,(100,150)) # w,h
     return resized_img[60:100]
@@ -44,7 +47,6 @@ def get_car_datasets():
     for f in files:
         processed_pic = process_car_pic(f)
         pics.append(processed_pic)
-        print(f[0])
         vecs.append(car_one_hot(int(f[0])))
 
     return pics, vecs
@@ -70,7 +72,7 @@ def generate_car_model(lr):
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(512, activation='relu'))
-    model.add(layers.Dense(36, activation='softmax'))
+    model.add(layers.Dense(8, activation='softmax'))
 
     # Set Learning Rate and Compile Model
     model.compile(loss='categorical_crossentropy',
@@ -95,30 +97,40 @@ def get_car_model(lr=1e-4, new=False):
     return model
 
 
-# TODO: Implement idg and train network
+def add_noise(img):
+    # VARIABILITY = 0.5
+    # deviation = VARIABILITY*random.random()
+    # noise = np.random.normal(0, deviation, img.shape)
+    # img += noise
+
+    img = uniform_filter(img,size=(1,1,1))
+    np.clip(img, 0., 255.)
+    return img
+
+
+# Predict car
 def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(X_dataset.shape)
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
         shear_range=0.3,
-        rotation_range=20,
+        rotation_range=10,
         zoom_range=0.15,
-        width_shift_range=[-15,15],
+        width_shift_range=[-10,10],
         preprocessing_function=util.add_noise,
         brightness_range=[0.25,1.3],
         validation_split=vs
     )
 
     print("Visualizing IDG.")
-    #m.visualize_idg(aug, X_dataset)
+    m.visualize_idg(aug, X_dataset)
 
     training_dataset = aug.flow(X_dataset, Y_dataset, subset='training')
     validation_dataset = aug.flow(X_dataset, Y_dataset, subset='validation')
 
     history_conv = model.fit(
         training_dataset,
-        batch_size=32,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -162,34 +174,42 @@ def visualize_idg(aug, X_dataset):
 
 
 # predict the car
-def predict_car(model, my_file):
-    print("actual: ", my_file)
-    pic = process_car_pic(file)
-    image = np.expand_dims(pic,axis=0)
+def predict_car(model, car):
+    # pic = process_car_pic(file)
+    image = np.expand_dims(car,axis=0)
+
     predicted_car = model.predict(image)[0]
-    print("predicted: ", predicted_car)
+    index_pred = np.argmax(predict_car)
+
+    res = [0] * 8
+    res[index_pred] = 1
+    print("predicted: ", res)
 
 
 def main():
-    NEW_MODEL = True
+    NEW_MODEL = False
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
     Y_dataset = np.array(vecs)
 
-    model = get_car_model(lr=1e-4,new=NEW_MODEL)
+    model = get_car_model(lr=1e-5,new=NEW_MODEL)
 
     model = train_car_model(model,
         X_dataset,
         Y_dataset,
         0.2,
-        10,
+        100,
     )
 
     save_car_model(model)
 
-    # try predict lol
-    predict_car()
+    # predict car
+    files = util.files_in_folder(CAR_PATH)
+    file_to_test = files[0]
+    car = process_car_pic(file_to_test)
+    print("actual: ", file_to_test)
+    predict_car(model, car)
 
 if __name__ == '__main__':
     main()
