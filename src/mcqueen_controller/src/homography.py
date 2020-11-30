@@ -13,8 +13,7 @@ class Homography():
 
     def __init__(self, template_paths):
         self.image_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in template_paths]
-        print(len(template_paths))
-
+        
 
     def detect_features(self, grayframe, plate_num):
         # grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # trainimage
@@ -58,4 +57,3 @@ class Homography():
             print("Too few valid keypoints found: {}/{}".format(len(good_points), MIN_MATCHES))
 
             return False
-            

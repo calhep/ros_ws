@@ -31,6 +31,8 @@ class ImageConverter:
         self.plate_num = 0
         self.hm = hm.Homography(self.image_paths)
 
+        self.frame_counter = 0
+
     def callback(self, image):
         try:
             grayscale_img = self.bridge.imgmsg_to_cv2(image, 'mono8')
@@ -38,25 +40,29 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-        # if self.hm.detect_features(grayscale_img, self.plate_num):
-        #     self.plate_num += 1
+        self.frame_counter = self.frame_counter + 1
+        if self.frame_counter % 3 == 0:
+            if self.hm.detect_features(grayscale_img[:,:640], self.plate_num) :
+                self.plate_num += 1
 
         # If the red bar of crosswalk is detected, check for pedestrian
-        if ch.is_at_crosswalk(colored_img):
-            self.rm.stop_robot()
-            rospy.sleep(5)
-            # TODO: Manual control of robot here based on homography/color masking of pedestrians
-            self.rm.move_robot(x=0.05)
+        # if ch.is_at_crosswalk(colored_img):
+        #     self.rm.stop_robot()
+        #     rospy.sleep(5)
+        #     # TODO: Manual control of robot here based on homography/color masking of pedestrians
+        #     self.rm.move_robot(x=0.05)
 
+        # cv2.imshow('boo',grayscale_img[650:,900:])
+        # cv2.waitKey(3)
         x, y, self.prev_com = ch.generate_com(grayscale_img[650:,900:], self.prev_com)
 
         # Control conditions
         if x < 120:
-            self.rm.move_robot(x=0.0, z=.45)
+            self.rm.move_robot(x=0.1,z=.7)
         elif 120 <= x and x <= 235:
-            self.rm.move_robot(x=0.125, z=0)
+            self.rm.move_robot(x=0.2, z=0)
         else:
-            self.rm.move_robot(x=0., z=-.45)
+            self.rm.move_robot(x=0.1,z=-.7)
 
 
 class RobotMovement:
