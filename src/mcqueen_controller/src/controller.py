@@ -48,15 +48,21 @@ class ImageConverter:
         #     # TODO: Manual control of robot here based on homography/color masking of pedestrians
         #     self.rm.move_robot(x=0.05)
 
-        x, y, self.prev_com = ch.generate_com(grayscale_img[650:,900:], self.prev_com)
+        x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
+        displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
+        cv2.imshow('g',displayed_img)
+        cv2.waitKey(3)
 
         # Control conditions
         if x < 120:
-            self.rm.move_robot(x=0.075, z=1)
-        elif 120 <= x and x <= 235:
+            print("left")
+            self.rm.move_robot(x=0.1, z=0.9)
+        elif 120 <= x and x <= 245:
+            print("forward")
             self.rm.move_robot(x=0.3, z=0)
         else:
-            self.rm.move_robot(x=0.075, z=-1)
+            print("right")
+            self.rm.move_robot(x=0.1, z=-.9)
 
 
 class RobotMovement:
@@ -80,7 +86,7 @@ class RobotMovement:
     # Gets us into the outer loop.
     def init(self):
         self.move_robot(x=0.15)
-        rospy.sleep(2.5)
+        rospy.sleep(2.3)
         self.move_robot(x=0,z=0.85)
         rospy.sleep(2.2)
         self.stop_robot()
@@ -122,7 +128,7 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
-    hm = Homography()
+    #hm = Homography()
     
     rospy.sleep(600)
 
