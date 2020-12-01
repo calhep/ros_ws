@@ -120,7 +120,7 @@ def add_noise(img):
     # noise = np.random.normal(0, deviation, img.shape)
     # img += noise
 
-    blur_factor = random.randint(0,20)
+    blur_factor = random.randint(0,5)
 
     img = uniform_filter(img,size=(blur_factor,blur_factor,1))
     np.clip(img, 0., 255.)
@@ -133,12 +133,13 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        shear_range=0.25,
-        rotation_range=30,
-   #     zoom_range=0.05,
-        width_shift_range=[-10,10],
+        shear_range=5,
+        rotation_range=5,
+        zoom_range=[1,3],
+        width_shift_range=[-20,20],
+        height_shift_range=[-20,20],
         preprocessing_function=add_noise,
-        brightness_range=[0.1,1.5],
+        brightness_range=(0.4,1.3),
         validation_split=vs
     )
 
@@ -150,7 +151,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=50,
+        steps_per_epoch=70,
         batch_size=1,
         epochs=epochs,
         verbose=1,
