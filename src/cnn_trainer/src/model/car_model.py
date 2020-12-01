@@ -91,7 +91,7 @@ def generate_car_model(lr):
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dense(512, activation='relu'))
     model.add(layers.Dense(8, activation='softmax'))
 
     # Set Learning Rate and Compile Model
@@ -139,7 +139,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
         # shear_range=5,
         # rotation_range=5,
         zoom_range=[1,3],
-        width_shift_range=[-20,20],
+        width_shift_range=[-30,30],
         height_shift_range=[-20,20],
         preprocessing_function=add_noise,
         brightness_range=(0.4,1.3),
@@ -213,10 +213,10 @@ def predict_car(model, car):
 
 
 def main():
-    NEW_MODEL = True
+    NEW_MODEL = False
     TRAIN = True
 
-    EPOCHS = 5
+    EPOCHS = 10
     VS = 0.2
 
     imgs, vecs = get_car_datasets()
@@ -258,8 +258,8 @@ def main():
     for t in tests:
         my_test = process_test_pic(t)
         print('actual: ', t)
-        plt.imshow(my_test)
-        plt.show()
+        cv2.imshow('g',my_test)
+        cv2.waitKey(0)
         predict_car(model, my_test)
 
 
