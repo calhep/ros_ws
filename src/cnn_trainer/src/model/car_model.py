@@ -3,6 +3,7 @@ import tensorflow as tf
 import os
 import cv2
 import random
+import math
 
 from matplotlib import pyplot as plt
 from scipy.ndimage.filters import uniform_filter
@@ -31,9 +32,10 @@ def car_one_hot(num):
 # process test pic
 def process_test_pic(my_file):
     pic_path = os.path.join(TEST_PATH, my_file)
-    img = cv2.imread(pic_path)
+    img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
     img_resized = cv2.resize(img, (380,600))
     res = img_resized[200:390,180:-50]
+    res = res.reshape(190,150,1)
     # print(res.shape)
     # plt.imshow(res)
     # plt.show()
@@ -43,9 +45,10 @@ def process_test_pic(my_file):
 # process car pic
 def process_car_pic(my_file):
     pic_path = os.path.join(CAR_PATH, my_file)
-    img = cv2.imread(pic_path)
+    img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
     img_resized = cv2.resize(img,(300,900))
     res = img_resized[360:550,150:] # 190, 150
+    res = res.reshape(190,150,1)
     # plt.imshow(res)
     # plt.show()
     return res
@@ -82,7 +85,7 @@ def load_car_model():
 # generate model for car
 def generate_car_model(lr):
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 3)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 1)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -210,15 +213,22 @@ def predict_car(model, car):
 
 
 def main():
-    NEW_MODEL = False
+    NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 10
+    EPOCHS = 5
     VS = 0.2
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
     Y_dataset = np.array(vecs)
+
+    print("Total examples: {}\nTraining examples: {}\nTest examples: {}".
+      format(X_dataset.shape[0],
+             math.ceil(X_dataset.shape[0] * (1-VS)),
+             math.floor(X_dataset.shape[0] * VS)))
+    print("X shape: " + str(X_dataset.shape))
+    print("Y shape: " + str(Y_dataset.shape))
 
     model = get_car_model(lr=1e-4,new=NEW_MODEL)
 
