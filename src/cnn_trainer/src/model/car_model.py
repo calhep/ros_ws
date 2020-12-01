@@ -84,9 +84,10 @@ def generate_car_model(lr):
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Dropout(0.25))
     model.add(layers.Flatten())
-    model.add(layers.Dropout(0.6))
-    model.add(layers.Dense(256, activation='relu'))
+    model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dropout(0.5))
     model.add(layers.Dense(8, activation='softmax'))
 
     # Set Learning Rate and Compile Model
@@ -118,7 +119,7 @@ def add_noise(img):
     # noise = np.random.normal(0, deviation, img.shape)
     # img += noise
 
-    blur_factor = random.randint(10,25)
+    blur_factor = random.randint(0,20)
 
     img = uniform_filter(img,size=(blur_factor,blur_factor,1))
     np.clip(img, 0., 255.)
@@ -134,7 +135,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
         shear_range=0.25,
         rotation_range=30,
    #     zoom_range=0.05,
-        width_shift_range=[-15,15],
+        width_shift_range=[-10,10],
         preprocessing_function=add_noise,
         brightness_range=[0.1,1.5],
         validation_split=vs
@@ -209,7 +210,7 @@ def main():
     NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 20
+    EPOCHS = 50
     VS = 0.2
 
     imgs, vecs = get_car_datasets()
