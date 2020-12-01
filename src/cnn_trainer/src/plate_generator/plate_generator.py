@@ -15,12 +15,17 @@ from PIL import Image, ImageFont, ImageDraw
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
 PLATE_PATH = os.path.join(PATH, 'media','plates')
 TEST_DATA_DIR = os.path.join(PATH, 'media','test_set')
+PARKING_PATH = os.path.join(PATH,'media','parking')
 
 # Choose directory to write to:
-my_path = PLATE_PATH
+my_path = PARKING_PATH
 
 
-for i in range(0, 1):
+for i in range(0, 50):
+
+    # number to write to parking identifier
+    #id = randint(1,8)
+    id = 1
 
     # Pick two random letters
     plate_alpha = ""
@@ -38,6 +43,16 @@ for i in range(0, 1):
     # Convert into a PIL image (this is so we can use the monospaced fonts)
     blank_plate_pil = Image.fromarray(blank_plate)
 
+
+
+    # Create parking spot label
+    s = "P" + str(id)
+    print(s)
+    parking_spot = 255 * np.ones(shape=[600, 600, 3], dtype=np.uint8)
+    cv2.putText(parking_spot, s, (30, 450), cv2.FONT_HERSHEY_PLAIN, 28,
+                    (0, 0, 0), 30, cv2.LINE_AA)
+    
+
     # Get a drawing context
     draw = ImageDraw.Draw(blank_plate_pil)
     monospace = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf", 200)
@@ -47,10 +62,20 @@ for i in range(0, 1):
     my_plate = np.array(blank_plate_pil)
 
     # Display image
-    plt.imshow(my_plate)
-    plt.show()
-    
+    # plt.imshow(my_plate)
+    # plt.show()
+
+    # Concatenate the parking number and plate together
+    spot_w_plate = np.concatenate((parking_spot, my_plate), axis=0)
+
+    # unlabelled plates (no QR)
+    unlabelled = np.concatenate((255 * np.ones(shape=[600, 600, 3],
+                                    dtype=np.uint8), spot_w_plate), axis=0)
+                                    
     # Write to file
-    cv2.imwrite(os.path.join(my_path, "plate_{}{}.png".format(plate_alpha, plate_num)), my_plate)
+    if my_path == PARKING_PATH:
+        cv2.imwrite(os.path.join(my_path, "{}plate_{}{}.png".format(id, plate_alpha, plate_num)), unlabelled)
+    elif my_path == PLATE_PATH:
+        cv2.imwrite(os.path.join(my_path, "plate_{}{}.png".format(plate_alpha, plate_num)), my_plate)
 
 print(len([name for name in os.listdir(my_path) if os.path.isfile(os.path.join(my_path, name))]) )

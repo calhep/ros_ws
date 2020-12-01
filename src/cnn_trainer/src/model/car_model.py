@@ -154,13 +154,13 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        # shear_range=5,
+        shear_range=2,
         # rotation_range=5,
-        zoom_range=[1,5],
+        zoom_range=[1,3.5],
         width_shift_range=[-30,30],
         height_shift_range=[-20,20],
         preprocessing_function=add_noise,
-        brightness_range=(0.4,1.3),
+        brightness_range=(0.3,1.3),
         validation_split=vs
     )
 
@@ -172,7 +172,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=40,
+        steps_per_epoch=105,
         batch_size=4,
         epochs=epochs,
         verbose=1,
@@ -221,7 +221,7 @@ def main():
     TRAIN = True
 
     EPOCHS = 30
-    VS = 0.3
+    VS = 0.2
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
