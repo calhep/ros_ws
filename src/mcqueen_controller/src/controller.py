@@ -72,10 +72,14 @@ class ImageConverter:
                 self.pedestrian = True
                 self.rm.stop_robot()
             else:
-                print("no one here, go forward")
+                # wait for white
+                while avg_white < 3:
+                    print("waiting for the cross") # No way to update the frame :()
+                while avg_white > 3:
+                    print("hurry up bro")
                 self.pedestrian = False
                 self.rm.move_robot(x=0.25)
-                rospy.sleep(1.25)      
+                rospy.sleep(1.3)      
     
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
