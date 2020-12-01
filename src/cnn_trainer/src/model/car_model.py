@@ -17,7 +17,8 @@ import util as util
 import model as m
 
 PATH = '/home/fizzer/ros_ws/src/cnn_trainer'
-CAR_PATH = os.path.join(PATH, 'media','test_set')
+CAR_PATH = os.path.join(PATH, 'media','parking')
+TEST_PATH = os.path.join(PATH, 'media', 'test_set')
 
 
 # one hot vector
@@ -27,13 +28,27 @@ def car_one_hot(num):
     return vecs
 
 
+# process test pic
+def process_test_pic(my_file):
+    pic_path = os.path.join(TEST_PATH, my_file)
+    img = cv2.imread(pic_path)
+    img_resized = cv2.resize(img, (380,600))
+    res = img_resized[200:390,40:-40]
+    # print(res.shape)
+    # plt.imshow(res)
+    # plt.show()
+    return res
+
+
 # process car pic
 def process_car_pic(my_file):
     pic_path = os.path.join(CAR_PATH, my_file)
-    print(pic_path)
     img = cv2.imread(pic_path)
-    resized_img = cv2.resize(img,(100,150)) # w,h
-    return resized_img[60:100]
+    img_resized = cv2.resize(img,(300,900))
+    res = img_resized[360:550,:] # 190, 300
+    # plt.imshow(res)
+    # plt.show()
+    return res
 
 
 # gets and crops car pics
@@ -45,9 +60,11 @@ def get_car_datasets():
 
     # resize and crop to p_
     for f in files:
+       # print("processing ", f)
         processed_pic = process_car_pic(f)
         pics.append(processed_pic)
         vecs.append(car_one_hot(int(f[0])))
+        
 
     return pics, vecs
 
@@ -65,7 +82,7 @@ def load_car_model():
 # generate model for car
 def generate_car_model(lr):
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(40, 100, 3)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 300, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -98,12 +115,12 @@ def get_car_model(lr=1e-4, new=False):
 
 
 def add_noise(img):
-    # VARIABILITY = 0.5
-    # deviation = VARIABILITY*random.random()
-    # noise = np.random.normal(0, deviation, img.shape)
-    # img += noise
+    VARIABILITY = 1.2
+    deviation = VARIABILITY*random.random()
+    noise = np.random.normal(0, deviation, img.shape)
+    img += noise
 
-    img = uniform_filter(img,size=(1,1,1))
+    img = uniform_filter(img,size=(15,15,1))
     np.clip(img, 0., 255.)
     return img
 
@@ -114,23 +131,25 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        shear_range=0.3,
-        rotation_range=10,
-        zoom_range=0.15,
-        width_shift_range=[-10,10],
-        preprocessing_function=util.add_noise,
-        brightness_range=[0.25,1.3],
+        shear_range=0.4,
+        rotation_range=35,
+        zoom_range=0.2,
+        width_shift_range=[-20,20],
+        preprocessing_function=add_noise,
+        brightness_range=[0.15,1.3],
         validation_split=vs
     )
 
     print("Visualizing IDG.")
-    m.visualize_idg(aug, X_dataset)
+    #m.visualize_idg(aug, X_dataset)
 
     training_dataset = aug.flow(X_dataset, Y_dataset, subset='training')
     validation_dataset = aug.flow(X_dataset, Y_dataset, subset='validation')
 
     history_conv = model.fit(
         training_dataset,
+        steps_per_epoch=32,
+        batch_size=1,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -179,15 +198,19 @@ def predict_car(model, car):
     image = np.expand_dims(car,axis=0)
 
     predicted_car = model.predict(image)[0]
-    index_pred = np.argmax(predict_car)
+    index_pred = np.argmax(predicted_car)
 
     res = [0] * 8
     res[index_pred] = 1
-    print("predicted: ", res)
+    print("Predicted: ", index_pred+1)
 
 
 def main():
     NEW_MODEL = False
+    TRAIN = False
+
+    EPOCHS = 10
+    VS = 0.2
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
@@ -195,21 +218,36 @@ def main():
 
     model = get_car_model(lr=1e-5,new=NEW_MODEL)
 
-    model = train_car_model(model,
-        X_dataset,
-        Y_dataset,
-        0.2,
-        100,
-    )
+    if TRAIN:
+        model = train_car_model(model,
+            X_dataset,
+            Y_dataset,
+            VS,
+            EPOCHS,
+        )
 
     save_car_model(model)
 
-    # predict car
+    # predict car from validation set xd bad practice
+    print("predicting from vali")
     files = util.files_in_folder(CAR_PATH)
-    file_to_test = files[0]
+    file_to_test = files[2]
+
     car = process_car_pic(file_to_test)
     print("actual: ", file_to_test)
     predict_car(model, car)
+
+    # predict car from test_set O_O
+    print("now predicting from test set")
+    tests = util.files_in_folder(TEST_PATH)
+    
+    for t in tests:
+        my_test = process_test_pic(t)
+        print('actual: ', t)
+        plt.imshow(my_test)
+        plt.show()
+        predict_car(model, my_test)
+
 
 if __name__ == '__main__':
     main()
