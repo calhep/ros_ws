@@ -33,7 +33,7 @@ def process_test_pic(my_file):
     pic_path = os.path.join(TEST_PATH, my_file)
     img = cv2.imread(pic_path)
     img_resized = cv2.resize(img, (380,600))
-    res = img_resized[200:390,40:-40]
+    res = img_resized[200:390,75:-75]
     # print(res.shape)
     # plt.imshow(res)
     # plt.show()
@@ -45,7 +45,7 @@ def process_car_pic(my_file):
     pic_path = os.path.join(CAR_PATH, my_file)
     img = cv2.imread(pic_path)
     img_resized = cv2.resize(img,(300,900))
-    res = img_resized[360:550,:] # 190, 300
+    res = img_resized[360:550,150:] # 190, 150
     # plt.imshow(res)
     # plt.show()
     return res
@@ -82,7 +82,7 @@ def load_car_model():
 # generate model for car
 def generate_car_model(lr):
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 300, 3)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -115,12 +115,14 @@ def get_car_model(lr=1e-4, new=False):
 
 
 def add_noise(img):
-    VARIABILITY = 1.2
-    deviation = VARIABILITY*random.random()
-    noise = np.random.normal(0, deviation, img.shape)
-    img += noise
+    # VARIABILITY = 1
+    # deviation = VARIABILITY*random.random()
+    # noise = np.random.normal(0, deviation, img.shape)
+    # img += noise
 
-    img = uniform_filter(img,size=(15,15,1))
+    blur_factor = random.randint(10,25)
+
+    img = uniform_filter(img,size=(blur_factor,blur_factor,1))
     np.clip(img, 0., 255.)
     return img
 
@@ -131,12 +133,12 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        shear_range=0.4,
-        rotation_range=35,
-        zoom_range=0.1,
+        shear_range=0.25,
+        rotation_range=30,
+        zoom_range=0.05,
         width_shift_range=[-20,20],
         preprocessing_function=add_noise,
-        brightness_range=[0.15,1.3],
+        brightness_range=[0.1,1.5],
         validation_split=vs
     )
 
@@ -148,7 +150,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=40,
+        steps_per_epoch=50,
         batch_size=1,
         epochs=epochs,
         verbose=1,
