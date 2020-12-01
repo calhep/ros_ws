@@ -121,8 +121,9 @@ class Homography():
     def slice_number(self, image):
         h, w = image.shape
 
-        number_slice = image[int(0.3*h):-1*int(0.3*h),int(0.2*w):-1*int(0.2*w)]
+        number_slice = image[int(0.25*h):-1*int(0.25*h),int(0.5*w):-1*int(0.2*w)]
         cv2.imshow('gyuh', number_slice)
+        cv2.imwrite('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/slice_p{}.jpg'.format(self.plate_num), number_slice)
         return
 
     # Image contouring

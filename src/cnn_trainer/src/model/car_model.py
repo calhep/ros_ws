@@ -31,26 +31,30 @@ def car_one_hot(num):
 
 # process test pic
 def process_test_pic(my_file):
-    pic_path = os.path.join(TEST_PATH, my_file)
+    pic_path = os.path.join('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/', my_file)
     img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
-    img_resized = cv2.resize(img, (380,600))
-    res = img_resized[200:390,180:-50]
-    res = res.reshape(190,150,1)
-    # print(res.shape)
+    img = cv2.resize(img, (100,130))
+    # res = img_resized[200:390,180:-50]
+    print(pic_path)
+    print(img.shape)
     # plt.imshow(res)
     # plt.show()
-    return res
+    # res = res.reshape(190,150,1)
+    img = img.reshape(img.shape[0], img.shape[1], 1)
+    print(img.shape)
+    return img
 
 
 # process car pic
 def process_car_pic(my_file):
     pic_path = os.path.join(CAR_PATH, my_file)
     img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
-    img_resized = cv2.resize(img,(300,900))
-    res = img_resized[360:550,150:] # 190, 150
-    res = res.reshape(190,150,1)
-    # plt.imshow(res)
+    img_resized = cv2.resize(img,(200,600))
+    img_resized = img_resized[235:365,100:] # 130, 100
+    # plt.imshow(img_resized)
     # plt.show()
+    res = img_resized.reshape(130,100,1)
+
     return res
 
 
@@ -85,7 +89,7 @@ def load_car_model():
 # generate model for car
 def generate_car_model(lr):
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 1)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(130, 100, 1)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -154,8 +158,8 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=70,
-        batch_size=1,
+        steps_per_epoch=35,
+        batch_size=2,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -213,10 +217,10 @@ def predict_car(model, car):
 
 
 def main():
-    NEW_MODEL = False
+    NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 10
+    EPOCHS = 20
     VS = 0.2
 
     imgs, vecs = get_car_datasets()
@@ -253,13 +257,12 @@ def main():
 
     # predict car from test_set O_O
     print("now predicting from test set")
-    tests = util.files_in_folder(TEST_PATH)
-    
+    tests = util.files_in_folder('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/')
     for t in tests:
         my_test = process_test_pic(t)
-        print('actual: ', t)
-        cv2.imshow('g',my_test)
-        cv2.waitKey(0)
+        print('actual: ', t[7:8])
+        cv2.imshow('g', my_test)
+        cv2.waitKey(3)
         predict_car(model, my_test)
 
 
