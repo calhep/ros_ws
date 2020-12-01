@@ -133,8 +133,8 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        shear_range=5,
-        rotation_range=5,
+        # shear_range=5,
+        # rotation_range=5,
         zoom_range=[1,3],
         width_shift_range=[-20,20],
         height_shift_range=[-20,20],
@@ -206,13 +206,14 @@ def predict_car(model, car):
     res = [0] * 8
     res[index_pred] = 1
     print("Predicted: ", index_pred+1)
+    print("\n")
 
 
 def main():
-    NEW_MODEL = True
+    NEW_MODEL = False
     TRAIN = True
 
-    EPOCHS = 20
+    EPOCHS = 10
     VS = 0.2
 
     imgs, vecs = get_car_datasets()
@@ -234,7 +235,7 @@ def main():
     # predict car from validation set xd bad practice
     print("predicting from vali")
     files = util.files_in_folder(CAR_PATH)
-    file_to_test = files[2]
+    file_to_test = files[6]
 
     car = process_car_pic(file_to_test)
     print("actual: ", file_to_test)
