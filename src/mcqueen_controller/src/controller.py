@@ -8,9 +8,10 @@ import sys
 import cv2
 import numpy as np
 
-import homography
+import homography as hm
 import callback_handling as ch
 
+from homography import Homography
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
@@ -23,10 +24,12 @@ class ImageConverter:
 
     def __init__(self, rm):
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback)
+        self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
         self.prev_com = (640, 360)
         self.rm = rm
-    
+  
+        self.plate_num = 0
+        #self.hm = hm.Homography()
 
     def callback(self, image):
         try:
@@ -35,22 +38,29 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-        # If the red bar of crosswalk is detected, check for pedestrian
-        if ch.is_at_crosswalk(colored_img):
-            self.rm.stop_robot()
-            rospy.sleep(5)
-            # TODO: Manual control of robot here based on homography/color masking of pedestrians
-            self.rm.move_robot(x=0.05)
+        # if self.hm.detect_features(grayscale_img, self.plate_num):
+        #     self.plate_num += 1
 
-        x, y, self.prev_com = ch.generate_com(grayscale_img[650:,900:], self.prev_com)
+        # If the red bar of crosswalk is detected, check for pedestrian
+        # if ch.is_at_crosswalk(colored_img):
+        #     self.rm.stop_robot()
+        #     rospy.sleep(5)
+        #     # TODO: Manual control of robot here based on homography/color masking of pedestrians
+        #     self.rm.move_robot(x=0.05)
+
+        x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
+        # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
+        # cv2.imshow('g',displayed_img)
+        # cv2.waitKey(3)
 
         # Control conditions
-        if x < 120:
-            self.rm.move_robot(x=0.0, z=.45)
-        elif 120 <= x and x <= 235:
-            self.rm.move_robot(x=0.125, z=0)
+        if x < 220:
+            self.rm.move_robot(x=0.05, z=0.7)
+        elif x > 250:
+            self.rm.move_robot(x=0.05, z=-0.7)
         else:
-            self.rm.move_robot(x=0., z=-.45)
+            self.rm.move_robot(x=0.15, z=0)
+            
 
 
 class RobotMovement:
@@ -74,7 +84,7 @@ class RobotMovement:
     # Gets us into the outer loop.
     def init(self):
         self.move_robot(x=0.15)
-        rospy.sleep(2.5)
+        rospy.sleep(2.3)
         self.move_robot(x=0,z=0.85)
         rospy.sleep(2.2)
         self.stop_robot()
@@ -116,8 +126,9 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
+    hm = Homography()
     
-    rospy.sleep(300)
+    rospy.sleep(600)
 
     # Stop the robot and the competition.
     rm.stop_robot()
