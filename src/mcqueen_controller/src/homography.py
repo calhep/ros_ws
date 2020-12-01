@@ -42,8 +42,10 @@ class Homography():
     def callback(self, image):
         car_homography = self.run_homography(image, True)
 
-        # if car_homography is not None:
-        #     plate_homography = self.run_homography(car_homography, False)
+        if car_homography is not None:
+            # plate_homography = self.run_homography(car_homography, False)
+            # self.splice_homography(car_homography)
+            self.slice_number(car_homography)
 
     
     # Method for generating homography on an image
@@ -108,12 +110,26 @@ class Homography():
 
 
     # Method for splitting up homographic match
-    def splice_homography(self, image):
+    def slice_plate(self, image):
         h, w = image.shape
+
+        plate_slice = image[int(0.75*h):-1*int(0.05*h),int(0.2*w):-1*int(0.2*w)]
+        cv2.imshow('gyuh', plate_slice)
         return
     
+    # Method for creating number slice
+    def slice_number(self, image):
+        h, w = image.shape
+
+        number_slice = image[int(0.3*h):-1*int(0.3*h),int(0.2*w):-1*int(0.2*w)]
+        cv2.imshow('gyuh', number_slice)
+        return
+
     # Image contouring
     def image_contour(self, image):
+        ret, thresh = cv2.threshold(img,127,255,0)
+        contours, hierarchy = cv2.findContours(thresh, 1, 2)
+
         return
 
     # Method for getting the prediction of a homographic match
