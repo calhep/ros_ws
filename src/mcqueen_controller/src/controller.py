@@ -29,7 +29,8 @@ class ImageConverter:
         self.rm = rm
   
         self.plate_num = 0
-        self.leaving = False
+        self.pedestrian = False
+        self.start_flag = False
         #self.hm = hm.Homography()
 
     def callback(self, image):
@@ -44,13 +45,15 @@ class ImageConverter:
 
         cv2.imshow('fa', frame)
         cv2.waitKey(1)
-        # if self.hm.detect_features(grayscale_img, self.plate_num):
-        #     self.plate_num += 1
 
         # If the red bar of crosswalk is detected, check for pedestrian
-        if ch.is_at_crosswalk(colored_img) and not leaving:
-            leaving = False
-            print("red mf detected")
+        crosswalk = ch.is_at_crosswalk(colored_img)
+        if (crosswalk or self.pedestrian) and self.start_flag:
+            if crosswalk:
+                print("red mf detected")
+            if self.pedestrian:
+                print('boi in da walk')
+
             self.rm.stop_robot()
 
             lower_white = np.array([0,0,128])
@@ -66,16 +69,13 @@ class ImageConverter:
 
             if avg_white > 3:
                 print("dude in cross walk")
+                self.pedestrian = True
                 self.rm.stop_robot()
-                rospy.sleep(2)
-       
-            print("no one here go")
-            self.rm.move_robot(x=0.35)
-            rospy.sleep(1)
-
-            # cv2.destroyAllWindows()
-            leaving = True
-            print("bye crosswalk")
+            else:
+                print("no one here, go forward")
+                self.pedestrian = False
+                self.rm.move_robot(x=0.25)
+                rospy.sleep(1.25)      
     
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
@@ -84,12 +84,16 @@ class ImageConverter:
         # cv2.waitKey(3)
 
         # Control conditions
-        if x < 220:
-            self.rm.move_robot(x=0.05, z=0.7)
-        elif x > 250:
-            self.rm.move_robot(x=0.05, z=-0.7)
+        if not self.pedestrian:
+            if x < 220:
+                self.rm.move_robot(x=0.05, z=0.7)
+            elif x > 250:
+                self.rm.move_robot(x=0.05, z=-0.7)
+            else:
+                self.start_flag = True # start, signifying we ahve started xD
+                self.rm.move_robot(x=0.1, z=0)
         else:
-            self.rm.move_robot(x=0.1, z=0)
+            self.rm.stop_robot()
             
 
 
