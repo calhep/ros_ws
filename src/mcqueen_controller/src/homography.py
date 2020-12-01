@@ -63,7 +63,6 @@ class Homography():
             cv2.waitKey(3)
             print(len(good_points))
             # cv2.imshow('gyuh',cv2.polylines(grayframe, [np.int32(dst)], True, (255, 0, 0), 3))
-            rospy.sleep(1.75)
             self.plate_num += 1
             
         # if len(good_points) > 0:
