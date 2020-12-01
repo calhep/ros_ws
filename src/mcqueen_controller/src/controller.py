@@ -31,7 +31,11 @@ class ImageConverter:
         self.plate_num = 0
         self.pedestrian = False
         self.start_flag = False
-        #self.hm = hm.Homography()
+        self.seen = False
+        self.leaving = False
+        self.waiting = False
+        self.lower_white = np.array([0,0,128])
+        self.upper_white = np.array([0,0,200])
 
     def callback(self, image):
         try:
@@ -43,12 +47,12 @@ class ImageConverter:
 
         frame = colored_img[360:400,500:760]
 
-        cv2.imshow('fa', frame)
-        cv2.waitKey(1)
+        # cv2.imshow('fa', frame)
+        # cv2.waitKey(1)
 
         # If the red bar of crosswalk is detected, check for pedestrian
         crosswalk = ch.is_at_crosswalk(colored_img)
-        if (crosswalk or self.pedestrian) and self.start_flag:
+        if (crosswalk or self.pedestrian) and self.start_flag and not self.leaving:
             if crosswalk:
                 print("red mf detected")
             if self.pedestrian:
@@ -56,11 +60,8 @@ class ImageConverter:
 
             self.rm.stop_robot()
 
-            lower_white = np.array([0,0,128])
-            upper_white = np.array([0,0,200])
-
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            white_mask = cv2.inRange(hsv, lower_white, upper_white)
+            white_mask = cv2.inRange(hsv, self.lower_white, self.upper_white)
 
             # cv2.imshow('r',white_mask)
             # cv2.waitKey(1)
@@ -71,15 +72,25 @@ class ImageConverter:
                 print("dude in cross walk")
                 self.pedestrian = True
                 self.rm.stop_robot()
-            else:
-                # wait for white
-                while avg_white < 3:
-                    print("waiting for the cross") # No way to update the frame :()
-                while avg_white > 3:
-                    print("hurry up bro")
+                self.waiting = True
+                if not self.seen:
+                    self.seen = True
+            else: # he aint in the crosswalk so wait
+                print("we waiting")
+                self.seen = False
+                self.waiting = True
+                self.rm.stop_robot()
+
+            if self.seen:
+                rospy.sleep(2) 
+                self.rm.move_robot(x=0.3)
+                rospy.sleep(1.75)
+                self.seen = False
+                self.waiting = False
                 self.pedestrian = False
-                self.rm.move_robot(x=0.25)
-                rospy.sleep(1.3)      
+                print("leaving now")
+                self.leaving = True
+                     
     
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
@@ -88,13 +99,14 @@ class ImageConverter:
         # cv2.waitKey(3)
 
         # Control conditions
-        if not self.pedestrian:
+        if not self.pedestrian and not self.waiting:
             if x < 220:
                 self.rm.move_robot(x=0.05, z=0.7)
             elif x > 250:
                 self.rm.move_robot(x=0.05, z=-0.7)
             else:
                 self.start_flag = True # start, signifying we ahve started xD
+                self.leaving = False
                 self.rm.move_robot(x=0.1, z=0)
         else:
             self.rm.stop_robot()
