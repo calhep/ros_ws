@@ -59,6 +59,9 @@ def get_model(lr=1e-4, plate_model=True, new=False):
 
 def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
 
+    print(X_dataset.shape)
+    print(Y_dataset.shape)
+
     if augment:
         print("Augmenting data.")
 
@@ -144,8 +147,8 @@ def predict_plate(plate, model):
     true = []
 
     for i in range(4):
-        # plt.imshow(dataset[i])
-        # plt.show()
+        plt.imshow(dataset[i])
+        plt.show()
         image = np.expand_dims(dataset[i], axis=0)
 
         y_true = vecs[i]
@@ -185,8 +188,8 @@ def predict_test_set(plate, model):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = True
-    NEW_MODEL = True
+    TRAIN = False
+    NEW_MODEL = False
     PREDICT = True
     AUGMENT = True
     USE_TEST_DATASET = False # not in use rn
