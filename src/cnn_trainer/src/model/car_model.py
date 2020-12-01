@@ -33,7 +33,7 @@ def process_test_pic(my_file):
     pic_path = os.path.join(TEST_PATH, my_file)
     img = cv2.imread(pic_path)
     img_resized = cv2.resize(img, (380,600))
-    res = img_resized[200:390,75:-75]
+    res = img_resized[200:390,180:-50]
     # print(res.shape)
     # plt.imshow(res)
     # plt.show()
@@ -84,11 +84,9 @@ def generate_car_model(lr):
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
-    model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(512, activation='relu'))
+    model.add(layers.Dropout(0.6))
+    model.add(layers.Dense(256, activation='relu'))
     model.add(layers.Dense(8, activation='softmax'))
 
     # Set Learning Rate and Compile Model
@@ -135,8 +133,8 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     aug = ImageDataGenerator(
         shear_range=0.25,
         rotation_range=30,
-        zoom_range=0.05,
-        width_shift_range=[-20,20],
+   #     zoom_range=0.05,
+        width_shift_range=[-15,15],
         preprocessing_function=add_noise,
         brightness_range=[0.1,1.5],
         validation_split=vs
