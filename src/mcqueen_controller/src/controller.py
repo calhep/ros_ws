@@ -44,24 +44,19 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-
         frame = colored_img[360:400,500:760]
 
-        # cv2.imshow('fa', frame)
-        # cv2.waitKey(1)
-
         # If the red bar of crosswalk is detected, check for pedestrian
-        crosswalk = ch.is_at_crosswalk(colored_img)
-        if (crosswalk or self.pedestrian) and self.start_flag and not self.leaving:
-            if crosswalk:
-                print("red mf detected")
-            if self.pedestrian:
-                print('boi in da walk')
-
+        if ch.is_at_crosswalk(colored_img) and self.start_flag and not self.leaving:
+            self.leaving = False
+            print("red mf detected")
             self.rm.stop_robot()
 
+            lower_white = np.array([0,0,128])
+            upper_white = np.array([0,0,200])
+
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            white_mask = cv2.inRange(hsv, self.lower_white, self.upper_white)
+            white_mask = cv2.inRange(hsv, lower_white, upper_white)
 
             # cv2.imshow('r',white_mask)
             # cv2.waitKey(1)
@@ -70,27 +65,15 @@ class ImageConverter:
 
             if avg_white > 3:
                 print("dude in cross walk")
-                self.pedestrian = True
                 self.rm.stop_robot()
-                self.waiting = True
-                if not self.seen:
-                    self.seen = True
-            else: # he aint in the crosswalk so wait
-                print("we waiting")
-                self.seen = False
-                self.waiting = True
-                self.rm.stop_robot()
+                rospy.sleep(2)
+       
+            print("no one here go")
+            self.rm.move_robot(x=0.31)
+            rospy.sleep(1.25)
 
-            if self.seen:
-                rospy.sleep(2) 
-                self.rm.move_robot(x=0.3)
-                rospy.sleep(1.75)
-                self.seen = False
-                self.waiting = False
-                self.pedestrian = False
-                print("leaving now")
-                self.leaving = True
-                     
+            self.leaving = True
+            print("bye crosswalk")
     
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
