@@ -29,6 +29,7 @@ class ImageConverter:
         self.rm = rm
   
         self.plate_num = 0
+        self.leaving = False
         #self.hm = hm.Homography()
 
     def callback(self, image):
@@ -38,15 +39,44 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
+
+        frame = colored_img[360:400,500:760]
+
+        cv2.imshow('fa', frame)
+        cv2.waitKey(1)
         # if self.hm.detect_features(grayscale_img, self.plate_num):
         #     self.plate_num += 1
 
         # If the red bar of crosswalk is detected, check for pedestrian
-        if ch.is_at_crosswalk(colored_img):
+        if ch.is_at_crosswalk(colored_img) and not leaving:
+            leaving = False
+            print("red mf detected")
             self.rm.stop_robot()
-            rospy.sleep(5)
-            # TODO: Manual control of robot here based on homography/color masking of pedestrians
-            self.rm.move_robot(x=0.05)
+
+            lower_white = np.array([0,0,128])
+            upper_white = np.array([0,0,200])
+
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            white_mask = cv2.inRange(hsv, lower_white, upper_white)
+
+            # cv2.imshow('r',white_mask)
+            # cv2.waitKey(1)
+
+            avg_white = np.sum(white_mask) / ((10400))
+
+            if avg_white > 3:
+                print("dude in cross walk")
+                self.rm.stop_robot()
+                rospy.sleep(2)
+       
+            print("no one here go")
+            self.rm.move_robot(x=0.35)
+            rospy.sleep(1)
+
+            # cv2.destroyAllWindows()
+            leaving = True
+            print("bye crosswalk")
+    
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
         # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
@@ -126,7 +156,7 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
-    hm = Homography()
+    #hm = Homography()
     
     rospy.sleep(600)
 

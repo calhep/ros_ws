@@ -94,8 +94,8 @@ class Homography():
                 cv2.imwrite('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/match_p{}.jpg'.format(self.plate_num), hom_match)
                 # cv2.imshow('car_homography', hom_match)
 
-            else:
-                # cv2.imshow('plate_homography', hom_match)
+            # else:
+            #     cv2.imshow('plate_homography', hom_match)
 
             # cv2.waitKey(3)
             print(len(good_points))
@@ -104,7 +104,7 @@ class Homography():
             return hom_match
 
         else:
-            print("Too few valid keypoints found: {}/{}".format(len(good_points), min_matches))
+           # print("Too few valid keypoints found: {}/{}".format(len(good_points), min_matches))
 
             return None
 

@@ -23,6 +23,7 @@ LEFT_BOUND = 480
 RIGHT_BOUND = 800
 RED_THRESHOLD = 0.8*255
 
+
 # Method that determines whether there is a crosswalk immediately in front of the robot
 def is_at_crosswalk(colored_img):
 
@@ -39,6 +40,16 @@ def is_at_crosswalk(colored_img):
     avg_red = np.sum(red_mask) / ((CAMERA_HEIGHT - LIMIT)*(RIGHT_BOUND-LEFT_BOUND))
 
     return avg_red > RED_THRESHOLD
+
+
+# Wait for the pedestrian.
+def pedestrian(rm, colored_img):
+    # get middle of frame
+    frame = colored_img[180:540,320:960]
+    cv2.imshow('f', frame)
+    cv2.waitKey(1)
+    return
+
 
 # Method to generate the center of mass of a given cv2 image
 def generate_com(grayscale_img, prev_com):
