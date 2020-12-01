@@ -29,6 +29,7 @@ class ImageConverter:
         self.rm = rm
   
         self.plate_num = 0
+        self.start_flag = False
         self.leaving = False
         #self.hm = hm.Homography()
 
@@ -39,17 +40,11 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-
         frame = colored_img[360:400,500:760]
 
-        cv2.imshow('fa', frame)
-        cv2.waitKey(1)
-        # if self.hm.detect_features(grayscale_img, self.plate_num):
-        #     self.plate_num += 1
-
         # If the red bar of crosswalk is detected, check for pedestrian
-        if ch.is_at_crosswalk(colored_img) and not leaving:
-            leaving = False
+        if ch.is_at_crosswalk(colored_img) and self.start_flag and not self.leaving:
+            self.leaving = False
             print("red mf detected")
             self.rm.stop_robot()
 
@@ -70,11 +65,10 @@ class ImageConverter:
                 rospy.sleep(2)
        
             print("no one here go")
-            self.rm.move_robot(x=0.35)
-            rospy.sleep(1)
+            self.rm.move_robot(x=0.31)
+            rospy.sleep(1.25)
 
-            # cv2.destroyAllWindows()
-            leaving = True
+            self.leaving = True
             print("bye crosswalk")
     
 
@@ -86,9 +80,11 @@ class ImageConverter:
         # Control conditions
         if x < 220:
             self.rm.move_robot(x=0.05, z=0.7)
+            self.leaving = False
         elif x > 250:
             self.rm.move_robot(x=0.05, z=-0.7)
         else:
+            self.start_flag = True # start, signifying we ahve started xD
             self.rm.move_robot(x=0.1, z=0)
             
 
