@@ -83,6 +83,7 @@ def load_car_model():
 def generate_car_model(lr):
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 3)))
+    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Dropout(0.25))
     model.add(layers.Flatten())
@@ -142,7 +143,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     )
 
     print("Visualizing IDG.")
-    #m.visualize_idg(aug, X_dataset)
+    #m.visualize_idg(aug, X_dataset) # VIS
 
     training_dataset = aug.flow(X_dataset, Y_dataset, subset='training')
     validation_dataset = aug.flow(X_dataset, Y_dataset, subset='validation')
@@ -221,7 +222,7 @@ def main():
 
     if TRAIN:
         model = train_car_model(model,
-            X_dataset,
+            X_dataset / 255,
             Y_dataset,
             VS,
             EPOCHS,
