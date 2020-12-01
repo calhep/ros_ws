@@ -51,7 +51,7 @@ def process_car_pic(my_file):
     img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
     img_resized = cv2.resize(img,(200,600))
     img_resized = img_resized[235:365,100:] # 130, 100
-    # plt.imshow(img_resized)
+    # plt.imshow(img)
     # plt.show()
     res = img_resized.reshape(130,100,1)
 
@@ -158,8 +158,8 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=35,
-        batch_size=2,
+        steps_per_epoch=36,
+        batch_size=4,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -213,15 +213,16 @@ def predict_car(model, car):
     res = [0] * 8
     res[index_pred] = 1
     print("Predicted: ", index_pred+1)
+    print("Confidence: ", predicted_car)
     print("\n")
 
 
 def main():
-    NEW_MODEL = True
-    TRAIN = True
+    NEW_MODEL = False
+    TRAIN = False
 
-    EPOCHS = 20
-    VS = 0.2
+    EPOCHS = 25
+    VS = 0.3
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
