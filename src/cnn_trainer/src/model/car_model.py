@@ -83,12 +83,12 @@ def load_car_model():
 def generate_car_model(lr):
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 3)))
+    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Dropout(0.25))
     model.add(layers.Flatten())
-    model.add(layers.Dense(128, activation='relu'))
     model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(128, activation='relu'))
     model.add(layers.Dense(8, activation='softmax'))
 
     # Set Learning Rate and Compile Model
@@ -211,7 +211,7 @@ def main():
     NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 50
+    EPOCHS = 20
     VS = 0.2
 
     imgs, vecs = get_car_datasets()
