@@ -2,4 +2,5 @@ src/2020T1_competition/
 build/*
 devel/*
 src/cnn_trainer/src/model/keras/*
+src/cnn_trainer/media/plates/*
 .vscode/
