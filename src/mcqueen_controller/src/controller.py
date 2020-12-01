@@ -42,11 +42,11 @@ class ImageConverter:
         #     self.plate_num += 1
 
         # If the red bar of crosswalk is detected, check for pedestrian
-        # if ch.is_at_crosswalk(colored_img):
-        #     self.rm.stop_robot()
-        #     rospy.sleep(5)
-        #     # TODO: Manual control of robot here based on homography/color masking of pedestrians
-        #     self.rm.move_robot(x=0.05)
+        if ch.is_at_crosswalk(colored_img):
+            self.rm.stop_robot()
+            rospy.sleep(5)
+            # TODO: Manual control of robot here based on homography/color masking of pedestrians
+            self.rm.move_robot(x=0.05)
 
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
         # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
