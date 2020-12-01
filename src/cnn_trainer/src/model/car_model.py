@@ -133,7 +133,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     aug = ImageDataGenerator(
         shear_range=0.4,
         rotation_range=35,
-        zoom_range=0.2,
+        zoom_range=0.1,
         width_shift_range=[-20,20],
         preprocessing_function=add_noise,
         brightness_range=[0.15,1.3],
@@ -148,7 +148,7 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=32,
+        steps_per_epoch=40,
         batch_size=1,
         epochs=epochs,
         verbose=1,
@@ -206,17 +206,17 @@ def predict_car(model, car):
 
 
 def main():
-    NEW_MODEL = False
-    TRAIN = False
+    NEW_MODEL = True
+    TRAIN = True
 
-    EPOCHS = 10
+    EPOCHS = 20
     VS = 0.2
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
     Y_dataset = np.array(vecs)
 
-    model = get_car_model(lr=1e-5,new=NEW_MODEL)
+    model = get_car_model(lr=1e-4,new=NEW_MODEL)
 
     if TRAIN:
         model = train_car_model(model,
