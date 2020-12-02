@@ -28,7 +28,7 @@ def generate_model(lr, model_type):
     if model_type == 0:
         output_size = 26
     else:
-        output_size = 8
+        output_size = 10
 
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(300, 105, 3)))
@@ -169,10 +169,12 @@ def predict_plate(plate, model, model_type):
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
 
+            print("Confidence for: ",util.index_to_val(index_true), y_predicted)
+
             true.append(util.index_to_val(index_true))
             chars.append(util.index_to_val(index_predicted))
 
-        print("Actual:", true) 
+        print("Actual:", true)
         print("Predicted:", chars) 
 
     if model_type == 1:
@@ -187,6 +189,8 @@ def predict_plate(plate, model, model_type):
 
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
+
+            print("Confidence for: ",index_true, y_predicted)
 
             true.append(index_true)
             chars.append(index_predicted)
@@ -212,6 +216,9 @@ def predict_test_set(plate, model, model_type):
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
 
+            print("Confidence \n")
+            print(y_predicted)
+
             chars.append(util.index_to_val(index_predicted))
 
         print("Actual:", plate) 
@@ -227,7 +234,9 @@ def predict_test_set(plate, model, model_type):
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
 
-            true.append(index_true)
+            print("Confidence \n")
+            print(y_predicted)
+            
             chars.append(index_predicted)
 
         print("Actual:", plate) 
@@ -237,14 +246,14 @@ def predict_test_set(plate, model, model_type):
 def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
-    RESET_MODEL = False # BE CAREFUL WITH THIS.
+    RESET_MODEL = True # BE CAREFUL WITH THIS.
 
     # PREDICT // AUGMENT?
     PREDICT = True
     AUGMENT = True
 
     # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
-    MODEL_TYPE = 0
+    MODEL_TYPE = 1
 
     # Constants
     LEARNING_RATE = 1e-4
@@ -289,7 +298,12 @@ def main():
     elif MODEL_TYPE == 1: # This corresponds to the model for numbers
         if TRAIN:
             X_dataset, Y_dataset = util.get_training_dataset(MODEL_TYPE)
-
+            
+            #for i,x in enumerate(X_dataset):
+                # plt.imshow(x)
+                # plt.show()
+                # print(Y_dataset[i])
+            
             model = train_model(model, 
                 X_dataset,
                 Y_dataset,
@@ -305,6 +319,12 @@ def main():
             plate_to_test = plates[0]
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
+
+            # Predict from test set
+            print("Testing from test set")
+            test_plates = util.files_in_folder(util.TEST_PATH)
+            for p in test_plates:
+                predict_test_set(p, model, MODEL_TYPE)
 
 
     else: # ur an idiot
