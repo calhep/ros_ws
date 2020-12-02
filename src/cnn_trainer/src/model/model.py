@@ -245,10 +245,11 @@ def main():
 
     elif MODEL == 1: # This corresponds to the model for numbers
         return
-    else:
+
+    else: # ur an idiot
         print("pick a model please.")
 
 
 if __name__ == '__main__':
     #main()
-    x,y = util.get_training_dataset(0)
+    x,y = util.get_training_dataset(1)

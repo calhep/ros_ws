@@ -32,14 +32,14 @@ def one_hot_letter(c):
 
 # Generate a one hot vector for a given number 
 def one_hot_num(n):
-    vec = [0] * 8
-    vec(num) = 1
+    vec = [0] * 10
+    vec[n] = 1
     return vec
+
 
 # Return an alphanumeric character from a given index
 def index_to_val(i):
     abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    
     return abc123[i]
 
 
@@ -66,12 +66,12 @@ def process_plate(my_file, model_type):
             vecs.append(one_hot_letter(my_file[6+i]))
     else:
         for i in range(2):
-            vecs.append(one_hot)
+            vecs.append(one_hot_num(int(my_file[8+i])))
 
-    # for i,c in enumerate(imgs):
-    #     print(vecs[i])
-    #     plt.imshow(c)
-    #     plt.show()
+    for i,c in enumerate(imgs):
+        print(vecs[i])
+        plt.imshow(c)
+        plt.show()
 
     return imgs, vecs 
 
