@@ -5,6 +5,9 @@ import sys
 import cv2
 import numpy as np
 
+from tensorflow.compat.v1 import get_default_graph
+from tensorflow.python.keras import models
+from tensorflow.python.keras import backend
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 
@@ -12,16 +15,21 @@ from sensor_msgs.msg import Image
 MIN_CAR_MATCHES = 14
 MIN_PLATE_MATCHES = 8
 
+sess = backend.get_session()
+graph = get_default_graph()
+
 
 class Homography():
 
     def __init__(self):
+        self.model = models.load_model('/home/fizzer/Desktop/Keras_Models/car_model_2')
+
         self.sift = cv2.xfeatures2d.SIFT_create()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
         self.bridge = CvBridge()
 
         # Car image references
-        self.template_car_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Templates/Car_Templates/p{}.png'.format(x + 1) for x in range(6)]
+        self.template_car_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Templates/Car_Templates/p{}.png'.format(x + 1) for x in range(8)]
         self.car_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in self.template_car_paths]
         self.kp_desc_images = [(lambda x: self.sift.detectAndCompute(x, None))(x) for x in self.car_templates]
 
@@ -35,6 +43,7 @@ class Homography():
         self.search_params = {}
         self.flann = cv2.FlannBasedMatcher(self.index_params, self.search_params)
 
+        self.plate_reference = {'2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '1': 6, '7': 7, '8': 7}
         self.plate_num = 0
     
     
@@ -45,9 +54,14 @@ class Homography():
         if car_homography is not None:
             # plate_homography = self.run_homography(car_homography, False)
             # self.splice_homography(car_homography)
-            self.slice_number(car_homography)
+            processed_number = self.slice_number(car_homography)
+            max_pred, pred_number = self.generate_prediction(processed_number)
 
-    
+            if max_pred > 0.95:
+                self.plate_num = self.plate_reference[str(pred_number)]
+                print(self.plate_num)
+
+
     # Method for generating homography on an image
     def run_homography(self, grayframe, detecting_car):
 
@@ -63,10 +77,15 @@ class Homography():
 
             min_matches = MIN_CAR_MATCHES
 
+<<<<<<< HEAD
+            cv2.imshow('reference_image', reference_image)
+            cv2.waitKey(3)
+=======
             # cv2.imshow('reference_image', reference_image)
             # cv2.imshow('grayframe', grayframe)
             # cv2.waitKey(3)
 
+>>>>>>> main
         else:
             reference_image = self.plate_templates[self.plate_num]
             kp_image, desc_image = self.kp_desc_plates[self.plate_num]
@@ -99,7 +118,6 @@ class Homography():
 
             # cv2.waitKey(3)
             print(len(good_points))
-            self.plate_num += 1
             
             return hom_match
 
@@ -121,9 +139,17 @@ class Homography():
     def slice_number(self, image):
         h, w = image.shape
 
+<<<<<<< HEAD
+        number_slice = image[int(0.25*h):-1*int(0.25*h),int(0.5*w):-1*int(0.2*w)]
+        cv2.imshow('gyuh', number_slice)
+        cv2.imwrite('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/slice_p{}.jpg'.format(self.plate_num), number_slice)
+        
+        return number_slice
+=======
         number_slice = image[int(0.3*h):-1*int(0.3*h),int(0.2*w):-1*int(0.2*w)]
         # cv2.imshow('gyuh', number_slice)
         return
+>>>>>>> main
 
     # Image contouring
     def image_contour(self, image):
@@ -134,4 +160,28 @@ class Homography():
 
     # Method for getting the prediction of a homographic match
     def generate_prediction(self, image):
-        return
+        img = self.process_img(image)
+        img = np.expand_dims(img, axis=0)
+
+        with graph.as_default():
+            backend.set_session(sess)
+            predicted_car = self.model.predict(img)[0]
+
+        index_pred = np.argmax(predicted_car)
+
+        res = [0] * 8
+        res[index_pred] = 1
+
+        print("Predicted: ", index_pred + 1)
+        print("Confidence: ", predicted_car)
+
+        res_max = np.amax(res)
+
+        return (res_max, index_pred + 1)
+
+
+    def process_img(self, image):
+        img = cv2.resize(image, (100,130))
+        img = img.reshape(img.shape[0], img.shape[1], 1)
+
+        return img

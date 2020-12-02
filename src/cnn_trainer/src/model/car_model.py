@@ -3,6 +3,7 @@ import tensorflow as tf
 import os
 import cv2
 import random
+import math
 
 from matplotlib import pyplot as plt
 from scipy.ndimage.filters import uniform_filter
@@ -30,24 +31,29 @@ def car_one_hot(num):
 
 # process test pic
 def process_test_pic(my_file):
-    pic_path = os.path.join(TEST_PATH, my_file)
-    img = cv2.imread(pic_path)
-    img_resized = cv2.resize(img, (380,600))
-    res = img_resized[200:390,180:-50]
-    # print(res.shape)
+    pic_path = os.path.join('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/', my_file)
+    img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
+    img = cv2.resize(img, (100,130))
+    # res = img_resized[200:390,180:-50]
+    print(pic_path)
+    print(img.shape)
     # plt.imshow(res)
     # plt.show()
-    return res
+    # res = res.reshape(190,150,1)
+    img = img.reshape(img.shape[0], img.shape[1], 1)
+    return img
 
 
 # process car pic
 def process_car_pic(my_file):
     pic_path = os.path.join(CAR_PATH, my_file)
-    img = cv2.imread(pic_path)
-    img_resized = cv2.resize(img,(300,900))
-    res = img_resized[360:550,150:] # 190, 150
-    # plt.imshow(res)
+    img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
+    img_resized = cv2.resize(img,(200,600))
+    img_resized = img_resized[235:365,100:] # 130, 100
+    # plt.imshow(img)
     # plt.show()
+    res = img_resized.reshape(130,100,1)
+
     return res
 
 
@@ -82,13 +88,13 @@ def load_car_model():
 # generate model for car
 def generate_car_model(lr):
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(190, 150, 3)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(130, 100, 1)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dense(512, activation='relu'))
     model.add(layers.Dense(8, activation='softmax'))
 
     # Set Learning Rate and Compile Model
@@ -127,32 +133,46 @@ def add_noise(img):
     return img
 
 
+def visualize_idg(aug, X_dataset):
+    for data in X_dataset:
+        sample = np.expand_dims(data,0)
+        it = aug.flow(sample, batch_size=1)
+        
+        # generate batch
+        batch = it.next()
+
+        # convert to uint8
+        image = batch[0].astype('uint8')
+        cv2.imshow('a',image)
+        cv2.waitKey(0)
+
+
 # Predict car
 def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(X_dataset.shape)
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        # shear_range=5,
+        shear_range=2,
         # rotation_range=5,
-        zoom_range=[1,3],
-        width_shift_range=[-20,20],
+        zoom_range=[1,3.5],
+        width_shift_range=[-30,30],
         height_shift_range=[-20,20],
         preprocessing_function=add_noise,
-        brightness_range=(0.4,1.3),
+        brightness_range=(0.3,1.3),
         validation_split=vs
     )
 
     print("Visualizing IDG.")
-    #m.visualize_idg(aug, X_dataset) # VIS
+    #visualize_idg(aug, X_dataset) # VIS
 
     training_dataset = aug.flow(X_dataset, Y_dataset, subset='training')
     validation_dataset = aug.flow(X_dataset, Y_dataset, subset='validation')
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=70,
-        batch_size=1,
+        steps_per_epoch=10,
+        batch_size=36,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -180,21 +200,6 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     return model
 
 
-# Visualize the output from the ImageDataGenerator. This can probably be 
-def visualize_idg(aug, X_dataset):
-    for data in X_dataset:
-        sample = np.expand_dims(data,0)
-        it = aug.flow(sample, batch_size=1)
-        
-        # generate batch
-        batch = it.next()
-
-        # convert to uint8
-        image = batch[0].astype('uint8')
-        plt.imshow(image)
-        plt.show()
-
-
 # predict the car
 def predict_car(model, car):
     # pic = process_car_pic(file)
@@ -206,25 +211,38 @@ def predict_car(model, car):
     res = [0] * 8
     res[index_pred] = 1
     print("Predicted: ", index_pred+1)
+    print("Confidence: ", predicted_car)
     print("\n")
 
 
 def main():
-    NEW_MODEL = False
+    NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 10
-    VS = 0.2
+    EPOCHS = 100
+    VS = 0.30
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
     Y_dataset = np.array(vecs)
+    print(len(X_dataset))
+
+    # for x in X_dataset:
+    #     cv2.imshow('x',x)
+    #     cv2.waitKey(0)
+
+    print("Total examples: {}\nTraining examples: {}\nTest examples: {}".
+      format(X_dataset.shape[0],
+             math.ceil(X_dataset.shape[0] * (1-VS)),
+             math.floor(X_dataset.shape[0] * VS)))
+    print("X shape: " + str(X_dataset.shape))
+    print("Y shape: " + str(Y_dataset.shape))
 
     model = get_car_model(lr=1e-4,new=NEW_MODEL)
 
     if TRAIN:
         model = train_car_model(model,
-            X_dataset / 255,
+            X_dataset,
             Y_dataset,
             VS,
             EPOCHS,
@@ -243,13 +261,12 @@ def main():
 
     # predict car from test_set O_O
     print("now predicting from test set")
-    tests = util.files_in_folder(TEST_PATH)
-    
+    tests = util.files_in_folder('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/')
     for t in tests:
         my_test = process_test_pic(t)
-        print('actual: ', t)
-        plt.imshow(my_test)
-        plt.show()
+        print('actual: ', t[7:8])
+        cv2.imshow('g', my_test)
+        cv2.waitKey(3)
         predict_car(model, my_test)
 
 
