@@ -196,31 +196,48 @@ def predict_plate(plate, model, model_type):
 
 
 # Predict the plates in the test set
-def predict_test_set(plate, model):
-    imgs = util.process_homographic_plate(plate)
+def predict_test_set(plate, model, model_type):
+    imgs = util.process_homographic_plate(plate, model_type)
     dataset = np.array(imgs)
-    print(len(dataset))
 
     chars = []
 
-    for i in range(4):
-        # plt.imshow(dataset[i])
-        # plt.show()
-        image = np.expand_dims(dataset[i], axis=0)
+    if model_type == 0:
+        for i in range(2):
+            # plt.imshow(dataset[i])
+            # plt.show()
 
-        y_predicted = model.predict(image)[0]
-        index_predicted = np.argmax(y_predicted)
+            image = np.expand_dims(dataset[i], axis=0)
 
-        chars.append(util.index_to_val(index_predicted))
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
 
-    print("Actual:", plate) 
-    print("Predicted:", chars) 
+            chars.append(util.index_to_val(index_predicted))
+
+        print("Actual:", p) 
+        print("Predicted:", chars) 
+
+    if model_type == 1:
+        for i in range(2):
+            # plt.imshow(dataset[i])
+            # plt.show()
+
+            image = np.expand_dims(dataset[i], axis=0)
+
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
+
+            true.append(index_true)
+            chars.append(index_predicted)
+
+        print("Actual:", true) 
+        print("Predicted:", chars) 
 
 
 def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
-    RESET_MODEL = True # BE CAREFUL WITH THIS.
+    RESET_MODEL = False # BE CAREFUL WITH THIS.
 
     # PREDICT // AUGMENT?
     PREDICT = True
@@ -233,11 +250,11 @@ def main():
     LEARNING_RATE = 1e-4
 
     # Letter model parameters.
-    EPOCHS_1 = 1
+    EPOCHS_1 = 2
     VS_1 = 0.2
 
     # Number model parameters.
-    EPOCHS_2 = 1
+    EPOCHS_2 = 2
     VS_2 = 0.2
 
     # Generate model or retrieve model
@@ -267,7 +284,7 @@ def main():
             print("Testing from test set")
             test_plates = util.files_in_folder(util.TEST_PATH)
             for p in test_plates:
-                predict_test_set(p, model)
+                predict_test_set(p, model, MODEL_TYPE)
 
     elif MODEL_TYPE == 1: # This corresponds to the model for numbers
         if TRAIN:

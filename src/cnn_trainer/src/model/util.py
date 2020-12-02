@@ -99,16 +99,16 @@ def get_training_dataset(model_type):
 
 
 # Returns 4 partitions of the license plate in the homographic image
-def process_homographic_plate(my_file):
+def process_homographic_plate(my_file, model_type):
     img_path = os.path.join(TEST_PATH, my_file)
     img = cv2.imread(img_path) # (150,196,3)
     h, w, _ = img.shape
     img_upscaled = cv2.resize(img, (3*h,3*w)) # 588, 450, 3
 
-    char1 = cv2.resize(img_upscaled[430:535,75:130], (105,300))
-    char2 = cv2.resize(img_upscaled[430:535,120:180], (105,300))
-    char3 = cv2.resize(img_upscaled[430:535,216:269], (105,300))
-    char4 = cv2.resize(img_upscaled[430:535,260:317], (105,300))
+    img1 = cv2.resize(img_upscaled[430:535,75:130], (105,300))
+    img2 = cv2.resize(img_upscaled[430:535,120:180], (105,300))
+    img3 = cv2.resize(img_upscaled[430:535,216:269], (105,300))
+    img4 = cv2.resize(img_upscaled[430:535,260:317], (105,300))
 
     # boundaries for red
     lower_red = np.array([0,130,0])
@@ -121,13 +121,17 @@ def process_homographic_plate(my_file):
         anded = cv2.bitwise_and(x,x,mask=red_mask)
         return x
 
-    chars = [mask(char1), mask(char2), mask(char3), mask(char4)]
+    if model_type == 0:
+        imgs = [img1,img2]
+    else:
+        imgs = [img3,img4]
 
-    # for c in chars:
-    #     plt.imshow(c)
-    #     plt.show()
 
-    return chars
+    for img in imgs:
+        plt.imshow(img)
+        plt.show()
+
+    return imgs
 
 
 # Gets the testing dataset
