@@ -77,8 +77,15 @@ class Homography():
 
             min_matches = MIN_CAR_MATCHES
 
+<<<<<<< HEAD
             cv2.imshow('reference_image', reference_image)
             cv2.waitKey(3)
+=======
+            # cv2.imshow('reference_image', reference_image)
+            # cv2.imshow('grayframe', grayframe)
+            # cv2.waitKey(3)
+
+>>>>>>> main
         else:
             reference_image = self.plate_templates[self.plate_num]
             kp_image, desc_image = self.kp_desc_plates[self.plate_num]
@@ -104,18 +111,18 @@ class Homography():
 
             if detecting_car:
                 cv2.imwrite('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/match_p{}.jpg'.format(self.plate_num), hom_match)
-                cv2.imshow('car_homography', hom_match)
+                # cv2.imshow('car_homography', hom_match)
 
-            else:
-                cv2.imshow('plate_homography', hom_match)
+            # else:
+            #     cv2.imshow('plate_homography', hom_match)
 
-            cv2.waitKey(3)
+            # cv2.waitKey(3)
             print(len(good_points))
             
             return hom_match
 
         else:
-            print("Too few valid keypoints found: {}/{}".format(len(good_points), min_matches))
+           # print("Too few valid keypoints found: {}/{}".format(len(good_points), min_matches))
 
             return None
 
@@ -125,18 +132,24 @@ class Homography():
         h, w = image.shape
 
         plate_slice = image[int(0.75*h):-1*int(0.05*h),int(0.2*w):-1*int(0.2*w)]
-        cv2.imshow('gyuh', plate_slice)
+        # cv2.imshow('gyuh', plate_slice)
         return
     
     # Method for creating number slice
     def slice_number(self, image):
         h, w = image.shape
 
+<<<<<<< HEAD
         number_slice = image[int(0.25*h):-1*int(0.25*h),int(0.5*w):-1*int(0.2*w)]
         cv2.imshow('gyuh', number_slice)
         cv2.imwrite('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/slice_p{}.jpg'.format(self.plate_num), number_slice)
         
         return number_slice
+=======
+        number_slice = image[int(0.3*h):-1*int(0.3*h),int(0.2*w):-1*int(0.2*w)]
+        # cv2.imshow('gyuh', number_slice)
+        return
+>>>>>>> main
 
     # Image contouring
     def image_contour(self, image):
