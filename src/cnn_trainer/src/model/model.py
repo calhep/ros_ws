@@ -214,7 +214,7 @@ def predict_test_set(plate, model, model_type):
 
             chars.append(util.index_to_val(index_predicted))
 
-        print("Actual:", p) 
+        print("Actual:", plate) 
         print("Predicted:", chars) 
 
     if model_type == 1:
@@ -230,7 +230,7 @@ def predict_test_set(plate, model, model_type):
             true.append(index_true)
             chars.append(index_predicted)
 
-        print("Actual:", true) 
+        print("Actual:", plate) 
         print("Predicted:", chars) 
 
 
