@@ -68,10 +68,10 @@ def process_plate(my_file, model_type):
         for i in range(2):
             vecs.append(one_hot_num(int(my_file[8+i])))
 
-    for i,c in enumerate(imgs):
-        print(vecs[i])
-        plt.imshow(c)
-        plt.show()
+    # for i,c in enumerate(imgs):
+    #     print(vecs[i])
+    #     plt.imshow(c)
+    #     plt.show()
 
     return imgs, vecs 
 

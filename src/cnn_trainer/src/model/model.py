@@ -23,7 +23,13 @@ def load_model(name):
 
 
 # Generate completely new training model
-def generate_model(lr):
+def generate_model(lr, model_type):
+
+    if model_type == 0:
+        output_size = 26
+    else:
+        output_size = 8
+
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(300, 105, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -32,7 +38,7 @@ def generate_model(lr):
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(512, activation='relu'))
-    model.add(layers.Dense(36, activation='softmax'))
+    model.add(layers.Dense(output_size, activation='softmax'))
 
     # Set Learning Rate and Compile Model
     model.compile(loss='categorical_crossentropy',
@@ -52,9 +58,9 @@ def get_model(lr=1e-4, model_type=0, new=False):
 
     if new:
         print("Compiling new model.")
-        model = generate_model(lr)
+        model = generate_model(lr, model_type)
     else:
-        print("Loading local model.")
+        print("Loading local model " + name)
         model = load_model(name)
 
     model.summary()
@@ -143,30 +149,50 @@ def visualize_idg(aug, X_dataset):
 
 
 # Predict a plate using a model
-def predict_plate(plate, model):
-    imgs, vecs = util.process_plate(plate)
+def predict_plate(plate, model, model_type):
+    imgs, vecs = util.process_plate(plate, model_type)
     dataset = np.array(imgs)
-    print(len(dataset))
 
     chars = []
     true = []
 
-    for i in range(4):
-        plt.imshow(dataset[i])
-        plt.show()
-        image = np.expand_dims(dataset[i], axis=0)
+    if model_type == 0:
+        for i in range(2):
+            plt.imshow(dataset[i])
+            plt.show()
 
-        y_true = vecs[i]
-        index_true = np.argmax(y_true)
+            image = np.expand_dims(dataset[i], axis=0)
 
-        y_predicted = model.predict(image)[0]
-        index_predicted = np.argmax(y_predicted)
+            y_true = vecs[i]
+            index_true = np.argmax(y_true)
 
-        true.append(util.index_to_val(index_true))
-        chars.append(util.index_to_val(index_predicted))
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
 
-    print("Actual:", true) 
-    print("Predicted:", chars) 
+            true.append(util.index_to_val(index_true))
+            chars.append(util.index_to_val(index_predicted))
+
+        print("Actual:", true) 
+        print("Predicted:", chars) 
+
+    if model_type == 1:
+        for i in range(2):
+            plt.imshow(dataset[i])
+            plt.show()
+
+            image = np.expand_dims(dataset[i], axis=0)
+
+            y_true = vecs[i]
+            index_true = np.argmax(y_true)
+
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
+
+            true.append(index_true)
+            chars.append(index_predicted)
+
+        print("Actual:", true) 
+        print("Predicted:", chars) 
 
 
 # Predict the plates in the test set
@@ -193,49 +219,49 @@ def predict_test_set(plate, model):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = False 
-    RESET_MODEL = False # BE CAREFUL WITH THIS.
+    TRAIN = True
+    RESET_MODEL = True # BE CAREFUL WITH THIS.
 
     # PREDICT // AUGMENT?
     PREDICT = True
     AUGMENT = True
 
     # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
-    MODEL = 0
+    MODEL_TYPE = 0
 
     # Constants
     LEARNING_RATE = 1e-4
 
     # Letter model parameters.
-    EPOCHS_1 = 5
+    EPOCHS_1 = 1
     VS_1 = 0.2
 
     # Number model parameters.
-    EPOCHS_2 = 5
+    EPOCHS_2 = 1
     VS_2 = 0.2
 
     # Generate model or retrieve model
-    model = get_model(lr=LEARNING_RATE, model_type=MODEL, new=RESET_MODEL)
+    model = get_model(lr=LEARNING_RATE, model_type=MODEL_TYPE, new=RESET_MODEL)
     
-    if MODEL == 0: # This corresponds to the model for plates
+    if MODEL_TYPE == 0: # This corresponds to the model for plates
         if TRAIN:
-            X_dataset, Y_dataset = util.get_training_dataset(MODEL) 
+            X_dataset, Y_dataset = util.get_training_dataset(MODEL_TYPE) 
 
             model = train_model(model,
                 X_dataset,
                 Y_dataset,
-                VALIDATION_SPLIT,
-                EPOCHS,
+                VS_1,
+                EPOCHS_1,
                 augment=AUGMENT)
 
-            save_model(model)
+            save_model(model, 'letter_model')
 
         # Predict a plate if specified
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
             plate_to_test = plates[16]
             print("Testing ", plate_to_test)
-            predict_plate(plate_to_test, model)
+            predict_plate(plate_to_test, model, MODEL_TYPE)
 
             # Predict from test set
             print("Testing from test set")
@@ -243,13 +269,30 @@ def main():
             for p in test_plates:
                 predict_test_set(p, model)
 
-    elif MODEL == 1: # This corresponds to the model for numbers
-        return
+    elif MODEL_TYPE == 1: # This corresponds to the model for numbers
+        if TRAIN:
+            X_dataset, Y_dataset = util.get_training_dataset(MODEL_TYPE)
+
+            model = train_model(model, 
+                X_dataset,
+                Y_dataset,
+                VS_2,
+                EPOCHS_2,
+                augment=AUGMENT
+                )
+
+            save_model(model, 'number_model')
+
+        if PREDICT:
+            plates = util.files_in_folder(util.PLATE_DIR)
+            plate_to_test = plates[0]
+            print("Testing ", plate_to_test)
+            predict_plate(plate_to_test, model, MODEL_TYPE)
+
 
     else: # ur an idiot
         print("pick a model please.")
 
 
 if __name__ == '__main__':
-    #main()
-    x,y = util.get_training_dataset(1)
+    main()
