@@ -40,6 +40,7 @@ def process_test_pic(my_file):
     # plt.imshow(res)
     # plt.show()
     # res = res.reshape(190,150,1)
+    _, img = cv2.threshold(img_resized, 60, 255, cv2.THRESH_BINARY_INV) 
     img = img.reshape(img.shape[0], img.shape[1], 1)
     return img
 
@@ -52,7 +53,8 @@ def process_car_pic(my_file):
     img_resized = img_resized[235:365,100:] # 130, 100
     # plt.imshow(img)
     # plt.show()
-    res = img_resized.reshape(130,100,1)
+    _, threshed = cv2.threshold(img_resized, 60, 255, cv2.THRESH_BINARY_INV) 
+    res = threshed.reshape(130,100,1)
 
     return res
 
@@ -153,13 +155,13 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        shear_range=2,
-        # rotation_range=5,
-        zoom_range=[1,3.5],
-        width_shift_range=[-30,30],
-        height_shift_range=[-20,20],
+        shear_range=3,
+        rotation_range=5,
+        zoom_range=[1,2.5],
+        width_shift_range=[-15,15],
+        height_shift_range=[-15,15],
         preprocessing_function=add_noise,
-        brightness_range=(0.3,1.3),
+        brightness_range=[0.3,1.1],
         validation_split=vs
     )
 
@@ -171,8 +173,8 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=24,
-        batch_size=25,
+        steps_per_epoch=125,
+        batch_size=16,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -219,8 +221,8 @@ def main():
     NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 30
-    VS = 0.35
+    EPOCHS = 20
+    VS = 0.2
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
@@ -264,9 +266,8 @@ def main():
     tests = util.files_in_folder('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/')
     for t in tests:
         my_test = process_test_pic(t)
-        print('actual: ', t[5:6])
         cv2.imshow('g', my_test)
-        cv2.waitKey(3)
+        cv2.waitKey(0)
         predict_car(model, my_test)
 
 
