@@ -11,6 +11,9 @@ import numpy as np
 import homography as hm
 import callback_handling as ch
 
+from tensorflow.compat.v1 import get_default_graph
+from tensorflow.python.keras import models
+from tensorflow.python.keras import backend
 from homography import Homography
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
@@ -36,6 +39,7 @@ class ImageConverter:
         self.waiting_for_blue = False
         self.leaving = False
         self.stop = False
+
 
     # Handle pedestrians.
     def handle_pedestrian(self, current_blue):
@@ -137,19 +141,30 @@ class PlateReader:
 
     def __init__(self):
         self.plate_pub = rospy.Publisher('/license_plate', String, queue_size=1)
-        self.start_string = '12345678,mcqueen,0,ABCD'
-        self.stop_string = '12345678,mcqueen,-1,ABCD'
+        self.id = '12345678,'
+        self.password = 'mcqueen,'
+        self.start_code = '0'
+        self.stop_code = '-1'
+
+    def publish_plate(self, car_number, plate_chars):
+        pub_string = self.id + self.password + str(car_number) + ',' + str(plate_chars)
+        self.plate_pub.publish(pub_string)
 
     def begin_comp(self):
-        self.plate_pub.publish(self.start_string) # TODO: We should not start the competition from within PR
+        start_string = self.id + self.password + self.start_code + ',' + 'ABCD'
+        self.plate_pub.publish(start_string)
 
     def stop_comp(self):
-        self.plate_pub.publish(self.stop_string)
+        stop_string = self.id + self.password + self.stop_code + ',' + 'ABCD'
+        self.plate_pub.publish(stop_string)
 
 
 def main(args):
     # TODO: We can consider moving and instantiating all classes in a higher level control class.
     # TODO: make sure that our code executes within the competition timing blocks.
+
+    sess = backend.get_session()
+    graph = get_default_graph()
 
     rm = RobotMovement()
     pr = PlateReader() 
@@ -157,6 +172,9 @@ def main(args):
     # Initialize the node.
     rospy.init_node('controller')
     init_rate = rospy.Rate(1)
+
+    model_l = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/letter_model')
+    model_n = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/number_model')
 
     # Begin the competition.
     init_rate.sleep()
@@ -166,9 +184,9 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
-    hm = Homography()
+    hm = Homography(pr,model_l,model_n)
     
-    rospy.sleep(600)
+    rospy.sleep(250)
 
     # Stop the robot and the competition.
     rm.stop_robot()

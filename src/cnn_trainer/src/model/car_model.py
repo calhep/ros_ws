@@ -222,8 +222,8 @@ def predict_car(model, car):
 
 
 def main():
-    NEW_MODEL = True
-    TRAIN = True
+    NEW_MODEL = False
+    TRAIN = False
 
     EPOCHS = 20
     VS = 0.2

@@ -21,8 +21,11 @@ graph = get_default_graph()
 
 class Homography():
 
-    def __init__(self):
-        self.model = models.load_model('/home/fizzer/Desktop/Keras_Models/car_model_2')
+    def __init__(self, pr, model_l, model_n):
+        self.pr = pr
+        self.model = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/car_model')
+        self.model_l = model_l
+        self.model_n = model_n
 
         self.sift = cv2.xfeatures2d.SIFT_create()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
@@ -55,11 +58,19 @@ class Homography():
             # plate_homography = self.run_homography(car_homography, False)
             # self.splice_homography(car_homography)
             processed_number = self.slice_number(car_homography)
+            processed_plate = self.slice_plate(car_homography)
+
+            processed_plate = processed_plate.reshape(processed_plate.shape[0],processed_plate.shape[1],1)
+
+            predicted_plate = self.plate_prediction(processed_plate)
+
             max_pred, pred_number = self.generate_prediction(processed_number)
 
             if max_pred > 0.95:
                 self.plate_num = self.plate_reference[str(pred_number)]
                 print(self.plate_num)
+
+                self.pr.publish_plate(pred_number, predicted_plate) # TODO: put predicted plate
 
 
     # Method for generating homography on an image
@@ -126,7 +137,7 @@ class Homography():
 
         plate_slice = image[int(0.75*h):-1*int(0.05*h),int(0.2*w):-1*int(0.2*w)]
         # cv2.imshow('gyuh', plate_slice)
-        return
+        return plate_slice
     
     # Method for creating number slice
     def slice_number(self, image):
@@ -137,13 +148,6 @@ class Homography():
         cv2.imwrite('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/slice_p{}.jpg'.format(self.plate_num), number_slice)
         
         return number_slice
-
-    # Image contouring
-    def image_contour(self, image):
-        ret, thresh = cv2.threshold(img,127,255,0)
-        contours, hierarchy = cv2.findContours(thresh, 1, 2)
-
-        return
 
     # Method for getting the prediction of a homographic match
     def generate_prediction(self, image):
@@ -156,19 +160,101 @@ class Homography():
 
         index_pred = np.argmax(predicted_car)
 
-        res = [0] * 8
+        res = [0] * 6
         res[index_pred] = 1
 
         print("Predicted: ", index_pred + 1)
         print("Confidence: ", predicted_car)
 
-        res_max = np.amax(res)
+        res_max = np.amax(predicted_car)
 
         return (res_max, index_pred + 1)
 
 
+    # prediction for plate
+    def plate_prediction(self, image):
+        letters, nums = self.process_plate(image)
+
+        # predict letters
+        l1 = np.expand_dims(letters[0],axis=0)
+        l2 = np.expand_dims(letters[1],axis=0)
+
+        with graph.as_default():
+            backend.set_session(sess)
+            pred_l1 = self.model_l.predict(l1)[0]
+            pred_l2 = self.model_l.predict(l2)[0]
+
+        i1 = np.argmax(pred_l1)
+        i2 = np.argmax(pred_l2)
+
+        char1 = self.index_to_val(i1)
+        char2 = self.index_to_val(i2)
+
+        pred_chars = [char1,char2]
+
+        # predict numbers
+        n1 = np.expand_dims(nums[0],axis=0)
+        n2 = np.expand_dims(nums[1],axis=0)
+
+        with graph.as_default():
+            backend.set_session(sess)
+            pred_n1 = self.model_n.predict(n1)[0]
+            pred_n2 = self.model_n.predict(n2)[0]
+
+        i3 = np.argmax(pred_n1)
+        i4 = np.argmax(pred_n2)
+
+        pred_chars.append(str(i3))
+        pred_chars.append(str(i4))
+
+        print(pred_chars)
+        return pred_chars
+
+
+
     def process_img(self, image):
         img = cv2.resize(image, (100,130))
+        _, img = cv2.threshold(img, 60, 255, cv2.THRESH_BINARY_INV)
         img = img.reshape(img.shape[0], img.shape[1], 1)
 
         return img
+
+    def thresh_char(self, frame):
+        _, threshed = cv2.threshold(frame, 60, 255,cv2.THRESH_BINARY_INV)
+        res = threshed.reshape(150,105,1)
+        return res
+  
+
+    def process_plate(self, image):
+        print(image.shape)
+
+        sz = (105,150)
+        
+        letter1 = self.thresh_char(cv2.resize(image[10:-15,10:45],sz))
+        letter2 = self.thresh_char(cv2.resize(image[10:-15,50:90],sz))
+    
+        num1 = self.thresh_char(cv2.resize(image[10:-15,130:175],sz))
+        num2 = self.thresh_char(cv2.resize(image[10:-15,170:215],sz))
+
+        cv2.imshow('a',letter1)
+        cv2.imshow('b',letter2)
+        cv2.imshow('c',num1)
+        cv2.imshow('d',num2)
+
+        letters = [letter1, letter2]
+        nums = [num1, num2]
+
+        return letters, nums
+
+    
+    # Return an alphanumeric character from a given index
+    def index_to_val(self, i):
+        abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        return abc123[i]
+
+
+    
+        
+
+
+      
