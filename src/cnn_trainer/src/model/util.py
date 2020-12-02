@@ -22,27 +22,29 @@ def files_in_folder(path):
 
 
 # Generate a one hot vector for a given character
-def one_hot(c):
-    vec = [0] * 36
-    try:
-        int(c)
-        index = int(c) + 26
-    except ValueError as e:
-        lowercase = c.lower()
-        index = LC.index(lowercase)
+def one_hot_letter(c):
+    vec = [0] * 26
+    lowercase = c.lower()
+    index = LC.index(lowercase)
     vec[index] = 1
+    return vec
+
+
+# Generate a one hot vector for a given number 
+def one_hot_num(n):
+    vec = [0] * 10
+    vec[n] = 1
     return vec
 
 
 # Return an alphanumeric character from a given index
 def index_to_val(i):
-    abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    
+    abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     return abc123[i]
 
 
-# Return the 4 partitions of a plate image and their associated one hot vectors
-def process_plate(my_file):
+# Return either 2 partitions of a plate image and their associated one hot vectors
+def process_plate(my_file, model_type):
     plate_path = os.path.join(PLATE_DIR, my_file)
     plate_img = cv2.imread(plate_path)
     
@@ -51,13 +53,23 @@ def process_plate(my_file):
     img2 = plate_img[49:349,145:250]
     img3 = plate_img[49:349,347:452]
     img4 = plate_img[49:349,447:552]
-    imgs = [img1,img2,img3,img4]
+
+    if model_type == 0:
+        imgs = [img1,img2]
+    else:
+        imgs = [img3,img4]
 
     vecs = []
-    for i in range(4):
-        vecs.append(one_hot(my_file[6+i]))
+    
+    if model_type == 0:
+        for i in range(2):
+            vecs.append(one_hot_letter(my_file[6+i]))
+    else:
+        for i in range(2):
+            vecs.append(one_hot_num(int(my_file[8+i])))
 
-    # for c in imgs:
+    # for i,c in enumerate(imgs):
+    #     print(vecs[i])
     #     plt.imshow(c)
     #     plt.show()
 
@@ -65,14 +77,14 @@ def process_plate(my_file):
 
 
 # Training datasets associated with the processed plates and their one-hot vectors
-def get_training_dataset():
+def get_training_dataset(model_type):
     plates = files_in_folder(PLATE_DIR)
 
     X_images = []
     Y_labels = []
 
     for p in plates:
-        imgs, vecs = process_plate(p)
+        imgs, vecs = process_plate(p, model_type)
         X_images.extend(imgs)
         Y_labels.extend(vecs)
 
@@ -87,16 +99,16 @@ def get_training_dataset():
 
 
 # Returns 4 partitions of the license plate in the homographic image
-def process_homographic_plate(my_file):
+def process_homographic_plate(my_file, model_type):
     img_path = os.path.join(TEST_PATH, my_file)
     img = cv2.imread(img_path) # (150,196,3)
     h, w, _ = img.shape
     img_upscaled = cv2.resize(img, (3*h,3*w)) # 588, 450, 3
 
-    char1 = cv2.resize(img_upscaled[430:535,75:130], (105,300))
-    char2 = cv2.resize(img_upscaled[430:535,120:180], (105,300))
-    char3 = cv2.resize(img_upscaled[430:535,216:269], (105,300))
-    char4 = cv2.resize(img_upscaled[430:535,260:317], (105,300))
+    img1 = cv2.resize(img_upscaled[430:535,75:130], (105,300))
+    img2 = cv2.resize(img_upscaled[430:535,120:180], (105,300))
+    img3 = cv2.resize(img_upscaled[430:535,216:269], (105,300))
+    img4 = cv2.resize(img_upscaled[430:535,260:317], (105,300))
 
     # boundaries for red
     lower_red = np.array([0,130,0])
@@ -109,13 +121,16 @@ def process_homographic_plate(my_file):
         anded = cv2.bitwise_and(x,x,mask=red_mask)
         return x
 
-    chars = [mask(char1), mask(char2), mask(char3), mask(char4)]
+    if model_type == 0:
+        imgs = [img1,img2]
+    else:
+        imgs = [img3,img4]
 
-    # for c in chars:
-    #     plt.imshow(c)
+    # for img in imgs:
+    #     plt.imshow(img)
     #     plt.show()
 
-    return chars
+    return imgs
 
 
 # Gets the testing dataset

@@ -13,17 +13,23 @@ import util as util
 
 
 # Save a Keras model
-def save_model(model):
-    model.save('keras/my_model')
+def save_model(model, name):
+    model.save('keras/' + name)
 
 
 # Load a Keras model
-def load_model():
-    return models.load_model('keras/my_model')
+def load_model(name):
+    return models.load_model('keras/' + name)
 
 
 # Generate completely new training model
-def generate_model(lr):
+def generate_model(lr, model_type):
+
+    if model_type == 0:
+        output_size = 26
+    else:
+        output_size = 10
+
     model = models.Sequential()
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(300, 105, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -32,7 +38,7 @@ def generate_model(lr):
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(512, activation='relu'))
-    model.add(layers.Dense(36, activation='softmax'))
+    model.add(layers.Dense(output_size, activation='softmax'))
 
     # Set Learning Rate and Compile Model
     model.compile(loss='categorical_crossentropy',
@@ -43,14 +49,19 @@ def generate_model(lr):
 
 
 # Get a model either by generating a new one or load from local
-def get_model(lr=1e-4, plate_model=True, new=False):  
+def get_model(lr=1e-4, model_type=0, new=False):  
+
+    if model_type == 0:
+        name = 'letter_model'
+    else:
+        name = 'number_model'
 
     if new:
-        print("compiling new model")
-        model = generate_model(lr)
+        print("Compiling new model.")
+        model = generate_model(lr, model_type)
     else:
-        print("Loading local model")
-        model = load_model()
+        print("Loading local model " + name)
+        model = load_model(name)
 
     model.summary()
 
@@ -138,99 +149,188 @@ def visualize_idg(aug, X_dataset):
 
 
 # Predict a plate using a model
-def predict_plate(plate, model):
-    imgs, vecs = util.process_plate(plate)
+def predict_plate(plate, model, model_type):
+    imgs, vecs = util.process_plate(plate, model_type)
     dataset = np.array(imgs)
-    print(len(dataset))
 
     chars = []
     true = []
 
-    for i in range(4):
-        plt.imshow(dataset[i])
-        plt.show()
-        image = np.expand_dims(dataset[i], axis=0)
+    if model_type == 0:
+        for i in range(2):
+            # plt.imshow(dataset[i])
+            # plt.show()
 
-        y_true = vecs[i]
-        index_true = np.argmax(y_true)
+            image = np.expand_dims(dataset[i], axis=0)
 
-        y_predicted = model.predict(image)[0]
-        index_predicted = np.argmax(y_predicted)
+            y_true = vecs[i]
+            index_true = np.argmax(y_true)
 
-        true.append(util.index_to_val(index_true))
-        chars.append(util.index_to_val(index_predicted))
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
 
-    print("Actual:", true) 
-    print("Predicted:", chars) 
+            print("Confidence for: ", util.index_to_val(index_true))
+            print(y_predicted)
+
+            true.append(util.index_to_val(index_true))
+            chars.append(util.index_to_val(index_predicted))
+
+        print("Actual:", true)
+        print("Predicted:", chars) 
+
+    if model_type == 1:
+        for i in range(2):
+            # plt.imshow(dataset[i])
+            # plt.show()
+
+            image = np.expand_dims(dataset[i], axis=0)
+
+            y_true = vecs[i]
+            index_true = np.argmax(y_true)
+
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
+
+            print("Confidence for: ", index_true)
+            print(y_predicted)
+
+            true.append(index_true)
+            chars.append(index_predicted)
+
+        print("Actual:", true) 
+        print("Predicted:", chars) 
 
 
 # Predict the plates in the test set
-def predict_test_set(plate, model):
-    imgs = util.process_homographic_plate(plate)
+def predict_test_set(plate, model, model_type):
+    imgs = util.process_homographic_plate(plate, model_type)
     dataset = np.array(imgs)
-    print(len(dataset))
 
     chars = []
 
-    for i in range(4):
-        # plt.imshow(dataset[i])
-        # plt.show()
-        image = np.expand_dims(dataset[i], axis=0)
+    if model_type == 0:
+        for i in range(2):
+            # plt.imshow(dataset[i])
+            # plt.show()
 
-        y_predicted = model.predict(image)[0]
-        index_predicted = np.argmax(y_predicted)
+            image = np.expand_dims(dataset[i], axis=0)
 
-        chars.append(util.index_to_val(index_predicted))
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
 
-    print("Actual:", plate) 
-    print("Predicted:", chars) 
+            print("Confidence")
+            print(y_predicted)
+            print("\n")
+
+            chars.append(util.index_to_val(index_predicted))
+
+        print("Actual:", plate) 
+        print("Predicted:", chars) 
+
+    if model_type == 1:
+        for i in range(2):
+            # plt.imshow(dataset[i])
+            # plt.show()
+
+            image = np.expand_dims(dataset[i], axis=0)
+
+            y_predicted = model.predict(image)[0]
+            index_predicted = np.argmax(y_predicted)
+
+            print("Confidence")
+            print(y_predicted)
+            print("\n")
+            
+            chars.append(index_predicted)
+
+        print("Actual:", plate) 
+        print("Predicted:", chars) 
 
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = False
-    NEW_MODEL = False
+    TRAIN = True
+    RESET_MODEL = False # BE CAREFUL WITH THIS.
     PREDICT = True
     AUGMENT = True
-    USE_TEST_DATASET = False # not in use rn
 
-    # select with model
-    PLATE_MODEL = True
+    # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
+    MODEL_TYPE = 0
 
+    # Constants
     LEARNING_RATE = 1e-4
-    VALIDATION_SPLIT = 0.2
-    EPOCHS = 5
+
+    # Letter model parameters.
+    EPOCHS_1 = 2
+    VS_1 = 0.2
+
+    # Number model parameters.
+    EPOCHS_2 = 2
+    VS_2 = 0.2
 
     # Generate model or retrieve model
-    model = get_model(lr=LEARNING_RATE, plate_model=PLATE_MODEL, new=NEW_MODEL)
-
-    # This corresponds to the model for plates
-    if PLATE_MODEL:
-        # If specified, train the model against training/validation data, always train if it's a new model.
-        if TRAIN or NEW_MODEL:
-            X_dataset, Y_dataset = util.get_training_dataset() 
+    model = get_model(lr=LEARNING_RATE, model_type=MODEL_TYPE, new=RESET_MODEL)
+    
+    if MODEL_TYPE == 0: # This corresponds to the model for plates
+        if TRAIN:
+            X_dataset, Y_dataset = util.get_training_dataset(MODEL_TYPE) 
 
             model = train_model(model,
                 X_dataset,
                 Y_dataset,
-                VALIDATION_SPLIT,
-                EPOCHS,
+                VS_1,
+                EPOCHS_1,
                 augment=AUGMENT)
 
-            save_model(model)
+            save_model(model, 'letter_model')
 
         # Predict a plate if specified
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
             plate_to_test = plates[16]
             print("Testing ", plate_to_test)
-            predict_plate(plate_to_test, model)
+            predict_plate(plate_to_test, model, MODEL_TYPE)
 
             # Predict from test set
             print("Testing from test set")
             test_plates = util.files_in_folder(util.TEST_PATH)
             for p in test_plates:
-                predict_test_set(p, model)
+                predict_test_set(p, model, MODEL_TYPE)
+
+    elif MODEL_TYPE == 1: # This corresponds to the model for numbers
+        if TRAIN:
+            X_dataset, Y_dataset = util.get_training_dataset(MODEL_TYPE)
+            
+            #for i,x in enumerate(X_dataset):
+                # plt.imshow(x)
+                # plt.show()
+                # print(Y_dataset[i])
+            
+            model = train_model(model, 
+                X_dataset,
+                Y_dataset,
+                VS_2,
+                EPOCHS_2,
+                augment=AUGMENT
+                )
+
+            save_model(model, 'number_model')
+
+        if PREDICT:
+            plates = util.files_in_folder(util.PLATE_DIR)
+            plate_to_test = plates[0]
+            print("Testing ", plate_to_test)
+            predict_plate(plate_to_test, model, MODEL_TYPE)
+
+            # Predict from test set
+            print("Testing from test set")
+            test_plates = util.files_in_folder(util.TEST_PATH)
+            for p in test_plates:
+                predict_test_set(p, model, MODEL_TYPE)
+
+
+    else: # ur an idiot
+        print("pick a model please.")
 
 
 if __name__ == '__main__':
