@@ -202,11 +202,11 @@ class Homography():
         cv2.imshow('b',letter2)
         cv2.waitKey(1)
 
-        num1 = image[:,115:175]
+        num1 = image[:,105:170]
         cv2.imshow('c',num1)
         cv2.waitKey(1)
 
-        num2 = image[:,160:210]
+        num2 = image[:,160:205]
         cv2.imshow('d',num2)
         cv2.waitKey(1)
     
