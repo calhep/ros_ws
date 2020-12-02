@@ -224,7 +224,7 @@ def main():
     TRAIN = True
 
     EPOCHS = 20
-    VS = 0.3
+    VS = 0.2
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
