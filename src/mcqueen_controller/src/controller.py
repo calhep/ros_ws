@@ -32,12 +32,10 @@ class ImageConverter:
         self.upper_blue = np.array([150,255,255])
 
         # pedestrian flags
-        self.avg_blue = 0
         self.crosswalk = False
+        self.waiting_for_blue = False
         self.leaving = False
-        self.waiting = False
-
-        self.initial = False
+        self.stop = False
 
     def callback(self, image):
         try:
@@ -48,38 +46,47 @@ class ImageConverter:
 
         if not self.crosswalk and not self.leaving:
             self.crosswalk = ch.is_at_crosswalk(colored_img)
-            self.initial = True
+            if self.crosswalk:
+                print("Initial waiting.")
+                self.waiting_for_blue = True
 
-        if self.crosswalk or self.waiting:
+        if self.crosswalk and not self.leaving:
             frame = colored_img[400:460,540:740]
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             blue_mask = cv2.inRange(hsv, self.lower_blue, self.upper_blue)
-        
-            
-            self.avg_blue = np.sum(blue_mask)
-            print(self.avg_blue)
 
-            if self.initial:
-                # keep waiting for blue
-                print("Waiting for pedestrian.")
-                if self.avg_blue > 0:
-                    self.initial = False
-            elif self.avg_blue > 0:
-                self.waiting = True
+            cv2.imshow('v', blue_mask)
+            cv2.waitKey(1)
+
+            current_blue = np.sum(blue_mask)
+            if current_blue > 5000:
+                # we have seen blue, wait for blue to disappear
+                print("blue in frame, please wait for cross")
+                self.stop = True
+                self.waiting_for_blue = False
+                self.rm.stop_robot()
+
+            if self.waiting_for_blue:
+                print("waiting for blue")
+                self.stop = True
+                self.rm.stop_robot()
             else:
-                self.waiting = False
-                self.leaving = True
-                self.initial = False
-
-
-
+                print("blue has appeared, wait.")
+                if current_blue == 0:
+                    print("no blue detected go")
+                    self.stop = False
+                    self.crosswalk = False
+                    self.rm.move_robot(x=0.15)
+                    rospy.sleep(4)
+                    self.leaving = True
+        
         x, y, self.prev_com = ch.generate_com(grayscale_img[:,800:], self.prev_com)
         # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
         # cv2.imshow('g',displayed_img)
         # cv2.waitKey(3)
 
         # Control conditions
-        if not self.waiting:
+        if not self.stop:
             if x < 220:
                 self.rm.move_robot(x=0.05, z=0.7)
                 self.leaving = False
@@ -87,9 +94,7 @@ class ImageConverter:
                 self.rm.move_robot(x=0.05, z=-0.7)
             else:
                 self.rm.move_robot(x=0.1, z=0)
-        elif self.waiting or self.initial:
-            print("Waiting.")
-            self.rm.stop_robot()
+       
 
 
 class RobotMovement:
