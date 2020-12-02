@@ -21,8 +21,9 @@ graph = get_default_graph()
 
 class Homography():
 
-    def __init__(self):
-        self.model = models.load_model('/home/fizzer/Desktop/Keras_Models/car_model_2')
+    def __init__(self, pr):
+        self.pr = pr
+        self.model = models.load_model('/home/fizzer/Desktop/car_model')
 
         self.sift = cv2.xfeatures2d.SIFT_create()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
@@ -60,6 +61,8 @@ class Homography():
             if max_pred > 0.95:
                 self.plate_num = self.plate_reference[str(pred_number)]
                 print(self.plate_num)
+
+                self.pr.publish_plate(self.plate_num, 'ABCD')
 
 
     # Method for generating homography on an image

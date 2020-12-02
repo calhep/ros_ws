@@ -37,6 +37,7 @@ class ImageConverter:
         self.leaving = False
         self.stop = False
 
+
     # Handle pedestrians.
     def handle_pedestrian(self, current_blue):
         if current_blue > 5000:
@@ -137,14 +138,22 @@ class PlateReader:
 
     def __init__(self):
         self.plate_pub = rospy.Publisher('/license_plate', String, queue_size=1)
-        self.start_string = '12345678,mcqueen,0,ABCD'
-        self.stop_string = '12345678,mcqueen,-1,ABCD'
+        self.id = '12345678,'
+        self.password = 'mcqueen,'
+        self.start_code = '0'
+        self.stop_code = '-1'
+
+    def publish_plate(self, car_number, plate_chars):
+        pub_string = self.id + self.password + car_number + ',' + plate_chars
+        self.plate_pub.publish(pub_string)
 
     def begin_comp(self):
-        self.plate_pub.publish(self.start_string) # TODO: We should not start the competition from within PR
+        start_string = self.id + self.password + self.start_code + ',' + 'ABCD'
+        self.plate_pub.publish(start_string)
 
     def stop_comp(self):
-        self.plate_pub.publish(self.stop_string)
+        stop_string = self.id + self.password + self.stop_code + ',' + 'ABCD'
+        self.plate_pub.publish(stop_string)
 
 
 def main(args):
@@ -166,7 +175,7 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
-    hm = Homography()
+    hm = Homography(pr)
     
     rospy.sleep(600)
 
