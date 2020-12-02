@@ -67,10 +67,17 @@ class Homography():
             max_pred, pred_number = self.generate_prediction(processed_number)
 
             if max_pred > 0.95:
+                var = self.plate_num
+                
                 self.plate_num = self.plate_reference[str(pred_number)]
-                print(self.plate_num)
 
+                if var == 5 and not self.plate_num == 5:
+                    self.plate_num = 1
+
+                print(self.plate_num)
+                
                 self.pr.publish_plate(pred_number, predicted_plate) # TODO: put predicted plate
+
 
 
     # Method for generating homography on an image
@@ -190,7 +197,7 @@ class Homography():
         char1 = self.index_to_val(i1)
         char2 = self.index_to_val(i2)
 
-        pred_chars = [char1,char2]
+        pred_chars = char1 + char2
 
         # predict numbers
         n1 = np.expand_dims(nums[0],axis=0)
@@ -204,8 +211,7 @@ class Homography():
         i3 = np.argmax(pred_n1)
         i4 = np.argmax(pred_n2)
 
-        pred_chars.append(str(i3))
-        pred_chars.append(str(i4))
+        pred_chars = pred_chars + str(i3) + str(i4)
 
         print(pred_chars)
         return pred_chars
@@ -230,11 +236,11 @@ class Homography():
 
         sz = (105,150)
         
-        letter1 = self.thresh_char(cv2.resize(image[10:-15,10:45],sz))
-        letter2 = self.thresh_char(cv2.resize(image[10:-15,50:90],sz))
+        letter1 = self.thresh_char(cv2.resize(image[10:-15,10:50],sz))
+        letter2 = self.thresh_char(cv2.resize(image[10:-15,50:100],sz))
     
-        num1 = self.thresh_char(cv2.resize(image[10:-15,130:175],sz))
-        num2 = self.thresh_char(cv2.resize(image[10:-15,170:215],sz))
+        num1 = self.thresh_char(cv2.resize(image[10:-15,130:180],sz))
+        num2 = self.thresh_char(cv2.resize(image[10:-15,172:218],sz))
 
         cv2.imshow('a',letter1)
         cv2.imshow('b',letter2)
