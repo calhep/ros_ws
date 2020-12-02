@@ -115,7 +115,7 @@ class Homography():
             return hom_match
 
         else:
-           # print("Too few valid keypoints found: {}/{}".format(len(good_points), min_matches))
+            print("Too few valid keypoints found: {}/{}".format(len(good_points), min_matches))
 
             return None
 
