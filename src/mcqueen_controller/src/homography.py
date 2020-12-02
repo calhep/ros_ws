@@ -43,7 +43,8 @@ class Homography():
         self.search_params = {}
         self.flann = cv2.FlannBasedMatcher(self.index_params, self.search_params)
 
-        self.plate_num = 0
+        self.plate_reference = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '1': 7, '7': 8, '8': 8}
+        self.plate_num = 1
     
     
     # Callback function for homography subscriber
@@ -54,9 +55,13 @@ class Homography():
             # plate_homography = self.run_homography(car_homography, False)
             # self.splice_homography(car_homography)
             processed_number = self.slice_number(car_homography)
-            self.generate_prediction(processed_number)
+            max_pred, pred_number = self.generate_prediction(processed_number)
 
-    
+            if max_pred > 0.95:
+                self.plate_num = self.plate_reference[pred_number]
+                print(self.plate_num)
+
+
     # Method for generating homography on an image
     def run_homography(self, grayframe, detecting_car):
 
@@ -73,7 +78,6 @@ class Homography():
             min_matches = MIN_CAR_MATCHES
 
             cv2.imshow('reference_image', reference_image)
-            cv2.imshow('grayframe', grayframe)
             cv2.waitKey(3)
         else:
             reference_image = self.plate_templates[self.plate_num]
@@ -107,7 +111,6 @@ class Homography():
 
             cv2.waitKey(3)
             print(len(good_points))
-            self.plate_num += 1
             
             return hom_match
 
@@ -159,11 +162,12 @@ class Homography():
         print("Predicted: ", index_pred + 1)
         print("Confidence: ", predicted_car)
 
-        return
+        res_max = np.amax(res)
+
+        return (res_max, predicted_car)
 
 
     def process_img(self, image):
-        print(image.shape)
         img = cv2.resize(image, (100,130))
         img = img.reshape(img.shape[0], img.shape[1], 1)
 
