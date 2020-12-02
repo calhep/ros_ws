@@ -27,10 +27,48 @@ class ImageConverter:
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
         self.prev_com = (640, 360)
         self.rm = rm
-  
-        self.plate_num = 0
-        #self.hm = hm.Homography()
 
+        self.lower_blue = np.array([100,0,0])
+        self.upper_blue = np.array([150,255,255])
+
+        # pedestrian flags
+        self.crosswalk = False
+        self.waiting_for_blue = False
+        self.leaving = False
+        self.stop = False
+
+    # Handle pedestrians.
+    def handle_pedestrian(self, current_blue):
+        if current_blue > 5000:
+            print("blue in frame, please wait for cross")
+            self.stop = True
+            self.waiting_for_blue = False
+            self.rm.stop_robot()
+
+        if self.waiting_for_blue:
+            print("waiting for blue")
+            self.stop = True
+            self.rm.stop_robot()
+        else:
+            print("blue has appeared, wait.")
+            if current_blue == 0:
+                print("no blue detected go")
+                self.stop = False
+                self.crosswalk = False
+                self.rm.move_robot(x=0.15)
+                rospy.sleep(4)
+                self.leaving = True
+    
+
+    # Mask blue in frame.
+    def mask_blue(self, colored_img):
+        frame = colored_img[400:460,540:740]
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        blue_mask = cv2.inRange(hsv, self.lower_blue, self.upper_blue)
+        return blue_mask
+
+
+    # Callback.
     def callback(self, image):
         try:
             grayscale_img = self.bridge.imgmsg_to_cv2(image, 'mono8')
@@ -38,29 +76,31 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-        # if self.hm.detect_features(grayscale_img, self.plate_num):
-        #     self.plate_num += 1
+        if not self.crosswalk and not self.leaving:
+            self.crosswalk = ch.is_at_crosswalk(colored_img)
+            if self.crosswalk:
+                print("Initial waiting.")
+                self.waiting_for_blue = True
 
-        # If the red bar of crosswalk is detected, check for pedestrian
-        # if ch.is_at_crosswalk(colored_img):
-        #     self.rm.stop_robot()
-        #     rospy.sleep(5)
-        #     # TODO: Manual control of robot here based on homography/color masking of pedestrians
-        #     self.rm.move_robot(x=0.05)
+        if self.crosswalk and not self.leaving:
+            blue_mask = self.mask_blue(colored_img)
+            self.handle_pedestrian(np.sum(blue_mask))
+            
+        x, y, self.prev_com = ch.generate_com(grayscale_img[:,800:], self.prev_com)
 
-        x, y, self.prev_com = ch.generate_com(grayscale_img[:,750:], self.prev_com)
         # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
         # cv2.imshow('g',displayed_img)
         # cv2.waitKey(3)
 
         # Control conditions
-        if x < 220:
-            self.rm.move_robot(x=0.05, z=0.7)
-        elif x > 250:
-            self.rm.move_robot(x=0.05, z=-0.7)
-        else:
-            self.rm.move_robot(x=0.1, z=0)
-            
+        if not self.stop:
+            if x < 220:
+                self.rm.move_robot(x=0.05, z=0.7)
+                self.leaving = False
+            elif x > 250:
+                self.rm.move_robot(x=0.05, z=-0.7)
+            else:
+                self.rm.move_robot(x=0.1, z=0)
 
 
 class RobotMovement:
@@ -122,7 +162,7 @@ def main(args):
     init_rate.sleep()
     pr.begin_comp()
     
-    # # start movin bruh
+    # start movin bruh
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
