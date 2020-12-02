@@ -41,7 +41,6 @@ def process_test_pic(my_file):
     # plt.show()
     # res = res.reshape(190,150,1)
     img = img.reshape(img.shape[0], img.shape[1], 1)
-    print(img.shape)
     return img
 
 
@@ -172,8 +171,8 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=105,
-        batch_size=4,
+        steps_per_epoch=10,
+        batch_size=36,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -220,8 +219,8 @@ def main():
     NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 30
-    VS = 0.2
+    EPOCHS = 100
+    VS = 0.30
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)

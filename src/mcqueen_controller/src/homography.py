@@ -29,7 +29,7 @@ class Homography():
         self.bridge = CvBridge()
 
         # Car image references
-        self.template_car_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Templates/Car_Templates/p{}.png'.format(x + 1) for x in range(6)]
+        self.template_car_paths = ['/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Templates/Car_Templates/p{}.png'.format(x + 1) for x in range(8)]
         self.car_templates = [cv2.imread(path, cv2.IMREAD_GRAYSCALE) for path in self.template_car_paths]
         self.kp_desc_images = [(lambda x: self.sift.detectAndCompute(x, None))(x) for x in self.car_templates]
 
@@ -43,8 +43,8 @@ class Homography():
         self.search_params = {}
         self.flann = cv2.FlannBasedMatcher(self.index_params, self.search_params)
 
-        self.plate_reference = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '1': 7, '7': 8, '8': 8}
-        self.plate_num = 1
+        self.plate_reference = {'2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '1': 6, '7': 7, '8': 7}
+        self.plate_num = 0
     
     
     # Callback function for homography subscriber
@@ -58,7 +58,7 @@ class Homography():
             max_pred, pred_number = self.generate_prediction(processed_number)
 
             if max_pred > 0.95:
-                self.plate_num = self.plate_reference[pred_number]
+                self.plate_num = self.plate_reference[str(pred_number)]
                 print(self.plate_num)
 
 
@@ -164,7 +164,7 @@ class Homography():
 
         res_max = np.amax(res)
 
-        return (res_max, predicted_car)
+        return (res_max, index_pred + 1)
 
 
     def process_img(self, image):
