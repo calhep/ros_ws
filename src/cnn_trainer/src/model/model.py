@@ -78,7 +78,7 @@ def add_noise(img):
     # noise = np.random.normal(0, deviation, img.shape)
     # img += noise
 
-    blur_factor = random.randint(0,15)
+    blur_factor = random.randint(0,17)
 
     img = uniform_filter(img,size=(blur_factor,blur_factor,1))
     np.clip(img, 0., 255.)
@@ -96,11 +96,11 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
         aug = ImageDataGenerator(
             shear_range=3,
             rotation_range=3,
-            zoom_range=[1,3.5],
+            zoom_range=[1,2.5],
             width_shift_range=[-15,15],
             height_shift_range=[-15,15],
             preprocessing_function=add_noise,
-            brightness_range=[0.2,1.1],
+            brightness_range=[0.3,1.1],
             validation_split=vs
         )
 
@@ -281,11 +281,11 @@ def main():
     LEARNING_RATE = 1e-4
 
     # Letter model parameters.
-    EPOCHS_1 = 10
+    EPOCHS_1 = 15
     VS_1 = 0.2
 
     # Number model parameters.
-    EPOCHS_2 = 10
+    EPOCHS_2 = 15
     VS_2 = 0.2
 
     # Generate model or retrieve model
@@ -307,7 +307,7 @@ def main():
         # Predict a plate if specified
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
-            plate_to_test = plates[1000]
+            plate_to_test = plates[350]
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
@@ -342,11 +342,11 @@ def main():
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
-            # # Predict from test set
-            # print("Testing from test set")
-            # test_plates = util.files_in_folder(util.TEST_PATH)
-            # for p in test_plates:
-            #     predict_test_set(p, model, MODEL_TYPE)
+            # Predict from test set
+            print("Testing from test set")
+            test_plates = util.files_in_folder(util.TEST_PATH)
+            for p in test_plates:
+                predict_test_set(p, model, MODEL_TYPE)
 
 
     else: # ur an idiot
