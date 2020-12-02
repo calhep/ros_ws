@@ -24,6 +24,8 @@ class Homography():
     def __init__(self, pr):
         self.pr = pr
         self.model = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/car_model')
+        # self.model_l = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/letter_model')
+        # self.model_n = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/number_model')
 
         self.sift = cv2.xfeatures2d.SIFT_create()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
@@ -60,7 +62,7 @@ class Homography():
 
             processed_plate = processed_plate.reshape(processed_plate.shape[0],processed_plate.shape[1],1)
 
-            image_contours = self.get_image_contour(processed_plate)
+            predicted_plate = self.plate_prediction(processed_plate)
 
             max_pred, pred_number = self.generate_prediction(processed_number)
 
@@ -168,6 +170,15 @@ class Homography():
 
         return (res_max, index_pred + 1)
 
+    # prediction for plate
+    def plate_prediction(self, image):
+        img = self.process_plate(image)
+        img = np.expand_dims(img, axis=0)
+
+        # with graph.as_default():
+        #     backend.set_session(sess)
+        #     predicted_letter = 
+
 
     def process_img(self, image):
         img = cv2.resize(image, (100,130))
@@ -177,64 +188,29 @@ class Homography():
         return img
 
 
-    # Image contouring
-    def get_image_contour(self, image):
-        cropped_characters = self.plate_contouring(image)
+    def process_plate(self, image):
+        print(image.shape)
 
-        return cropped_characters
-
-
-    def plate_contouring(self, image):
-        plate_image = cv2.convertScaleAbs(image, alpha=(255.0))
-        cv2.imshow('p',image)
+        cv2.imshow('whole',image)
         cv2.waitKey(1)
-
-        # _, binary_thresh = cv2.threshold(plate_image, 5, 255,
-        #                  cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-        # # Apply dilation 
-        # morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        # thresh_morph = cv2.morphologyEx(binary_thresh, cv2.MORPH_DILATE, morph_kernel)
-
-        # test,cont,test2 = cv2.findContours(binary_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # cv2.imshow('t',test)
+        # letter1 = image[:,10:45]
+        # cv2.imshow('a',letter1)
         # cv2.waitKey(1)
 
-        # # creat a copy version "test_roi" of plat_image to draw bounding box
-        # test_roi = plate_image.copy()
+        letter2 = image[:,50:90]
+        cv2.imshow('b',letter2)
+        cv2.waitKey(1)
 
-        # # Initialize a list which will be used to append charater image
-        # crop_characters = []
+        num1 = image[:,115:175]
+        cv2.imshow('c',num1)
+        cv2.waitKey(1)
 
-        # # define standard width and height of character
-        # digit_w, digit_h = 30, 60
-
-        # for c in self.sort_contours(cont):
-        #     (x, y, w, h) = cv2.boundingRect(c)
-        #     ratio = h/w
-        #     if 1<=ratio<=3.5: # Only select contour with defined ratio
-        #         if h/plate_image.shape[0]>=0.5: # Select contour which has the height larger than 50% of the plate
-        #             # Draw bounding box arroung digit number
-        #             cv2.rectangle(test_roi, (x, y), (x + w, y + h), (0, 255,0), 2)
-
-        #             # Sperate number and gibe prediction
-        #             curr_num = thresh_morph[y:y+h,x:x+w]
-        #             curr_num = cv2.resize(curr_num, dsize=(digit_w, digit_h))
-        #             _, curr_num = cv2.threshold(curr_num, 220, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        #             crop_characters.append(curr_num)
+        num2 = image[:,160:210]
+        cv2.imshow('d',num2)
+        cv2.waitKey(1)
+    
         
-        # print("Detect {} letters...".format(len(crop_characters)))   
-        # return crop_characters
 
 
-    # Code inspired by https://medium.com/@quangnhatnguyenle/detect-and-recognize-vehicles-license-plate-with-machine-learning-and-python-part-2-plate-de644de9849f    # Create sort_contours() function to grab the contour of each digit from left to right
-    def sort_contours(cnts,reverse=False):
-        i = 0
-
-        print(type(cnts))
-        boundingBoxes = [cv2.boundingRect(c) for c in cnts]
-        (cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
-                                            key=lambda b: b[1][i], reverse=reverse))
-        
-        return cnts
+      
