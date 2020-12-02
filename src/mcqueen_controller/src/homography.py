@@ -62,7 +62,7 @@ class Homography():
                 self.plate_num = self.plate_reference[str(pred_number)]
                 print(self.plate_num)
 
-                self.pr.publish_plate(self.plate_num, 'ABCD')
+                self.pr.publish_plate(pred_number, 'ABCD')
 
 
     # Method for generating homography on an image

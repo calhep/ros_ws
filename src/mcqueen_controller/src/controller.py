@@ -144,7 +144,7 @@ class PlateReader:
         self.stop_code = '-1'
 
     def publish_plate(self, car_number, plate_chars):
-        pub_string = self.id + self.password + car_number + ',' + plate_chars
+        pub_string = self.id + self.password + str(car_number) + ',' + str(plate_chars)
         self.plate_pub.publish(pub_string)
 
     def begin_comp(self):
@@ -177,7 +177,7 @@ def main(args):
     ic = ImageConverter(rm)
     hm = Homography(pr)
     
-    rospy.sleep(600)
+    rospy.sleep(250)
 
     # Stop the robot and the competition.
     rm.stop_robot()

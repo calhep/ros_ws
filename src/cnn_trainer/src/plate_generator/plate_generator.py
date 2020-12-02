@@ -33,7 +33,7 @@ for i in range(0, 50):
         plate_alpha += (random.choice(string.ascii_uppercase))
 
     # Pick two random numbers
-    num = 80
+    num = 00
     #num = randint(0, 99)
     plate_num = "{:02d}".format(num)
 
