@@ -13,13 +13,13 @@ import util as util
 
 
 # Save a Keras model
-def save_model(model):
-    model.save('keras/my_model')
+def save_model(model, name):
+    model.save('keras/' + name)
 
 
 # Load a Keras model
-def load_model():
-    return models.load_model('keras/my_model')
+def load_model(name):
+    return models.load_model('keras/' + name)
 
 
 # Generate completely new training model
@@ -43,14 +43,19 @@ def generate_model(lr):
 
 
 # Get a model either by generating a new one or load from local
-def get_model(lr=1e-4, plate_model=True, new=False):  
+def get_model(lr=1e-4, model_type=0, new=False):  
+
+    if model_type == 0:
+        name = 'letter_model'
+    else:
+        name = 'number_model'
 
     if new:
-        print("compiling new model")
+        print("Compiling new model.")
         model = generate_model(lr)
     else:
-        print("Loading local model")
-        model = load_model()
+        print("Loading local model.")
+        model = load_model(name)
 
     model.summary()
 
@@ -188,24 +193,33 @@ def predict_test_set(plate, model):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = False
-    NEW_MODEL = False
+    TRAIN = False 
+    RESET_MODEL = False # BE CAREFUL WITH THIS.
+
+    # PREDICT // AUGMENT?
     PREDICT = True
     AUGMENT = True
-    USE_TEST_DATASET = False # not in use rn
 
-    # select with model
-    PLATE_MODEL = True
-
+    # Constants
     LEARNING_RATE = 1e-4
-    VALIDATION_SPLIT = 0.2
-    EPOCHS = 5
+
+    # Letter model parameters.
+    EPOCHS_1 = 5
+    VS_1 = 0.2
+
+    # Number model parameters.
+    EPOCHS_2 = 5
+    VS_2 = 0.2
+    
+    # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
+    MODEL = 0
 
     # Generate model or retrieve model
-    model = get_model(lr=LEARNING_RATE, plate_model=PLATE_MODEL, new=NEW_MODEL)
+    model = get_model(lr=LEARNING_RATE, model_type=MODEL, new=RESET_MODEL)
+
 
     # This corresponds to the model for plates
-    if PLATE_MODEL:
+    if LETTER_MODEL:
         # If specified, train the model against training/validation data, always train if it's a new model.
         if TRAIN or NEW_MODEL:
             X_dataset, Y_dataset = util.get_training_dataset() 
@@ -231,6 +245,9 @@ def main():
             test_plates = util.files_in_folder(util.TEST_PATH)
             for p in test_plates:
                 predict_test_set(p, model)
+
+    elif NUMBER_MODEL:
+
 
 
 if __name__ == '__main__':
