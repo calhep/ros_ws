@@ -57,8 +57,8 @@ class Homography():
 
         if self.flag:
             self.pr.stop_comp()
-
-        if car_homography is not None:
+        
+        elif car_homography is not None:
             # plate_homography = self.run_homography(car_homography, False)
             # self.splice_homography(car_homography)
             processed_number = self.slice_number(car_homography)
@@ -250,15 +250,15 @@ class Homography():
 
         return img
 
-    def thresh_char(self, frame,dilate,erode):
+    def thresh_char(self, frame,dilate,erode,more=0):
         _, threshed = cv2.threshold(frame, 60, 255,cv2.THRESH_BINARY_INV)
 
         if dilate:
-            kernel = np.ones((3,3),np.uint8)
+            kernel = np.ones((5+more,5+more),np.uint8)
             threshed = cv2.dilate(threshed,kernel,iterations=1)
 
         if erode:
-            kernel = np.ones((3,3),np.uint8)
+            kernel = np.ones((4+more,4+more),np.uint8)
             threshed = cv2.erode(threshed,kernel,iterations=1)
 
         res = threshed.reshape(150,105,1)
@@ -270,11 +270,11 @@ class Homography():
 
         sz = (105,150)
         
-        letter1 = self.thresh_char(cv2.resize(image[10:-10,10:50],sz), dilate, erode)
-        letter2 = self.thresh_char(cv2.resize(image[10:-10,50:100],sz), dilate,erode)
+        letter1 = self.thresh_char(cv2.resize(image[10:-10,10:50],sz), dilate, erode,more=0)
+        letter2 = self.thresh_char(cv2.resize(image[10:-10,50:100],sz), dilate,erode,more=0)
     
-        num1 = self.thresh_char(cv2.resize(image[10:-10,130:175],sz),dilate,erode)
-        num2 = self.thresh_char(cv2.resize(image[10:-10,178:213],sz),dilate,erode)
+        num1 = self.thresh_char(cv2.resize(image[10:-10,130:175],sz),dilate,erode,more=0)
+        num2 = self.thresh_char(cv2.resize(image[10:-10,178:213],sz),dilate,erode, more=2)
 
         cv2.imshow('a',letter1)
         cv2.imshow('b',letter2)
@@ -291,10 +291,3 @@ class Homography():
     def index_to_val(self, i):
         abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         return abc123[i]
-
-
-    
-        
-
-
-      

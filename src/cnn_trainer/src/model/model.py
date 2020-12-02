@@ -78,9 +78,27 @@ def add_noise(img):
     # noise = np.random.normal(0, deviation, img.shape)
     # img += noise
 
-    blur_factor = random.randint(0,18)
+    flag = random.randint(0,1)
 
+    blur_factor = random.randint(0,10)
+    df = random.randint(1,5)
+    kernel = np.ones((df,df),np.uint8)
+
+    if flag == 1:
+        img = cv2.dilate(img,kernel,iterations=1)
+    # else:
+    #     img = cv2.erode(img,kernel,iterations=1)
+
+    img = img.reshape(150,105,1)
     img = uniform_filter(img,size=(blur_factor,blur_factor,1))
+
+    # kernel2 = np.array([[-100, -100, -100], 
+    #                     [-100, 1,-100], 
+    #                     [-100, -100, -100]])
+    
+    # img = cv2.filter2D(img,-1,kernel2)
+    # img = img.reshape(150,105,1)
+
     np.clip(img, 0., 255.)
     return img
 
@@ -95,12 +113,12 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
 
         aug = ImageDataGenerator(
             shear_range=3,
-            rotation_range=3,
-            zoom_range=[1,2.5],
-            width_shift_range=[-15,15],
-            height_shift_range=[-15,15],
+            rotation_range=2,
+            zoom_range=[0.75,2.5],
+            width_shift_range=[-32,32],
+            height_shift_range=[-32,32],
             preprocessing_function=add_noise,
-            brightness_range=[0.3,1.1],
+            brightness_range=[0.8,1.1],
             validation_split=vs
         )
 
@@ -275,13 +293,13 @@ def main():
     AUGMENT = True
 
     # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
-    MODEL_TYPE = 1
+    MODEL_TYPE = 0
 
     # Constants
     LEARNING_RATE = 1e-4
 
     # Letter model parameters.
-    EPOCHS_1 = 15
+    EPOCHS_1 = 10
     VS_1 = 0.2
 
     # Number model parameters.

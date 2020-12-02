@@ -145,6 +145,7 @@ class PlateReader:
         self.password = 'mcqueen,'
         self.start_code = '0'
         self.stop_code = '-1'
+        self.stop = False
 
     def publish_plate(self, car_number, plate_chars):
         pub_string = self.id + self.password + str(car_number) + ',' + str(plate_chars)
@@ -156,7 +157,9 @@ class PlateReader:
 
     def stop_comp(self):
         stop_string = self.id + self.password + self.stop_code + ',' + 'ABCD'
-        self.plate_pub.publish(stop_string)
+        if not self.stop:
+            self.stop = True
+            self.plate_pub.publish(stop_string)
 
 
 def main(args):
