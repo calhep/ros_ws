@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import random
+import cv2
 
 from matplotlib import pyplot as plt
 from tensorflow.python.keras import layers
@@ -33,7 +34,7 @@ def generate_model(lr, model_type):
         output_size = 10
 
     model = models.Sequential()
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(300, 105, 3)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(150, 105, 1)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
@@ -71,14 +72,15 @@ def get_model(lr=1e-4, model_type=0, new=False):
 
 
 # Generate noise
-# https://stackoverflow.com/questions/43382045/keras-realtime-augmentation-adding-noise-and-contrast
 def add_noise(img):
-    VARIABILITY = 5
-    deviation = VARIABILITY*random.random()
-    noise = np.random.normal(0, deviation, img.shape)
-    img += noise
+    # VARIABILITY = 5
+    # deviation = VARIABILITY*random.random()
+    # noise = np.random.normal(0, deviation, img.shape)
+    # img += noise
 
-    img = uniform_filter(img,size=(10,10,1))
+    blur_factor = random.randint(0,15)
+
+    img = uniform_filter(img,size=(blur_factor,blur_factor,1))
     np.clip(img, 0., 255.)
     return img
 
@@ -92,18 +94,18 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
         print("Augmenting data.")
 
         aug = ImageDataGenerator(
-            shear_range=1.5,
+            shear_range=3,
             rotation_range=3,
-            zoom_range=[1,2.25],
-            width_shift_range=[-10,10],
-            height_shift_range=[-10,10],
+            zoom_range=[1,3.5],
+            width_shift_range=[-15,15],
+            height_shift_range=[-15,15],
             preprocessing_function=add_noise,
             brightness_range=[0.2,1.1],
             validation_split=vs
         )
 
         print("Visualizing IDG.")
-       # visualize_idg(aug, X_dataset)
+        #visualize_idg(aug, X_dataset)
 
         print("Creating augmented datasets.")
 
@@ -114,6 +116,7 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
 
         history_conv = model.fit(
             training_dataset,
+            steps_per_epoch=200,
             batch_size=16,
             epochs=epochs,
             verbose=1,
@@ -161,8 +164,8 @@ def visualize_idg(aug, X_dataset):
 
         # convert to uint8
         image = batch[0].astype('uint8')
-        plt.imshow(image)
-        plt.show()
+        cv2.imshow('i',image)
+        cv2.waitKey(0)
 
 
 # Predict a plate using a model
@@ -220,7 +223,7 @@ def predict_plate(plate, model, model_type):
 
 # Predict the plates in the test set
 def predict_test_set(plate, model, model_type):
-    imgs = util.process_homographic_plate(plate, model_type)
+    imgs = util.process_test_plate(plate, model_type)
     dataset = np.array(imgs)
 
     chars = []
@@ -267,7 +270,7 @@ def predict_test_set(plate, model, model_type):
 def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
-    RESET_MODEL = True # BE CAREFUL WITH THIS.
+    RESET_MODEL = False # BE CAREFUL WITH THIS.
     PREDICT = True
     AUGMENT = True
 
@@ -278,11 +281,11 @@ def main():
     LEARNING_RATE = 1e-4
 
     # Letter model parameters.
-    EPOCHS_1 = 20
+    EPOCHS_1 = 10
     VS_1 = 0.2
 
     # Number model parameters.
-    EPOCHS_2 = 20
+    EPOCHS_2 = 10
     VS_2 = 0.2
 
     # Generate model or retrieve model
@@ -304,15 +307,15 @@ def main():
         # Predict a plate if specified
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
-            plate_to_test = plates[16]
+            plate_to_test = plates[1000]
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
-            # # Predict from test set
-            # print("Testing from test set")
-            # test_plates = util.files_in_folder(util.TEST_PATH)
-            # for p in test_plates:
-            #     predict_test_set(p, model, MODEL_TYPE)
+            # Predict from test set
+            print("Testing from test set")
+            test_plates = util.files_in_folder(util.TEST_PATH)
+            for p in test_plates:
+                predict_test_set(p, model, MODEL_TYPE)
 
     elif MODEL_TYPE == 1: # This corresponds to the model for numbers
         if TRAIN:
@@ -335,7 +338,7 @@ def main():
 
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
-            plate_to_test = plates[0]
+            plate_to_test = plates[11]
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
@@ -352,3 +355,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    #_,_ = util.get_training_dataset(0)

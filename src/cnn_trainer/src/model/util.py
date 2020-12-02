@@ -16,6 +16,10 @@ MODEL_PATH = os.path.join(PATH, 'src', 'model')
 VALIDATION_SPLIT = 0.2
 
 
+LOWER_RED = np.array([0,165,100])
+UPPER_RED = np.array([0,255,255])
+
+
 # Get all files in a path
 def files_in_folder(path):
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
@@ -43,20 +47,33 @@ def index_to_val(i):
     return abc123[i]
 
 
+# mask red letter
+def thresh(frame):
+    _, threshed = cv2.threshold(frame, 100, 255,cv2.THRESH_BINARY_INV)
+    res = threshed.reshape(150,105,1)
+    return res
+
+# mask sample
+def thresh2(frame):
+    _, threshed = cv2.threshold(frame, 60, 255,cv2.THRESH_BINARY_INV)
+    res = threshed.reshape(150,105,1)
+    return res
+
+
 # Return either 2 partitions of a plate image and their associated one hot vectors
 def process_plate(my_file, model_type):
     plate_path = os.path.join(PLATE_DIR, my_file)
-    plate_img = cv2.imread(plate_path)
+    plate_img = cv2.imread(plate_path, cv2.IMREAD_GRAYSCALE)
     
     # crop into subsections (x dataset) shape is (300,105,0)
-    img1 = plate_img[49:349,45:150]
-    img2 = plate_img[49:349,145:250]
-    img3 = plate_img[49:349,347:452]
-    img4 = plate_img[49:349,447:552]
-
+    
     if model_type == 0:
+        img1 = thresh(plate_img[140:290,45:150])
+        img2 = thresh(plate_img[140:290,145:250])
         imgs = [img1,img2]
     else:
+        img3 = thresh(plate_img[140:290,347:452])
+        img4 = thresh(plate_img[140:290,447:552])
         imgs = [img3,img4]
 
     vecs = []
@@ -70,8 +87,8 @@ def process_plate(my_file, model_type):
 
     # for i,c in enumerate(imgs):
     #     print(vecs[i])
-    #     plt.imshow(c)
-    #     plt.show()
+    #     cv2.imshow('c',c)
+    #     cv2.waitKey(0)
 
     return imgs, vecs 
 
@@ -99,46 +116,46 @@ def get_training_dataset(model_type):
 
 
 # Returns 4 partitions of the license plate in the homographic image
-def process_homographic_plate(my_file, model_type):
+def process_test_plate(my_file, model_type):
     img_path = os.path.join(TEST_PATH, my_file)
-    img = cv2.imread(img_path) # (150,196,3)
-    h, w, _ = img.shape
-    img_upscaled = cv2.resize(img, (3*h,3*w)) # 588, 450, 3
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE) # (329,405,1)
+    img_r = cv2.resize(img, (400,400)) # 588, 450, 3
 
-    img1 = cv2.resize(img_upscaled[430:535,75:130], (105,300))
-    img2 = cv2.resize(img_upscaled[430:535,120:180], (105,300))
-    img3 = cv2.resize(img_upscaled[430:535,216:269], (105,300))
-    img4 = cv2.resize(img_upscaled[430:535,260:317], (105,300))
-
-    # boundaries for red
-    lower_red = np.array([0,130,0])
-    upper_red = np.array([255,255,225])
-
-    # TODO: not doing anything currently, we are just returning the raw partitions.
-    def mask(x):
-        hsv = cv2.cvtColor(x,cv2.COLOR_BGR2HSV)
-        red_mask = cv2.inRange(hsv,lower_red,upper_red)
-        anded = cv2.bitwise_and(x,x,mask=red_mask)
-        return x
+    sz = (105,150)
 
     if model_type == 0:
+        img1 = thresh2(cv2.resize(img_r[300:-60,90:145], sz))
+        img2 = thresh2(cv2.resize(img_r[300:-60,140:190], sz))
         imgs = [img1,img2]
     else:
+        img3 = thresh2(cv2.resize(img_r[300:-60,220:270], sz))
+        img4 = thresh2(cv2.resize(img_r[300:-60,270:315], sz))
         imgs = [img3,img4]
 
-    # for img in imgs:
-    #     plt.imshow(img)
-    #     plt.show()
+    # for i in imgs: 
+    #     cv2.imshow('i',i)
+    #     cv2.waitKey(0)
 
     return imgs
 
 
 # Gets the testing dataset
-def get_test_dataset():
-    # TODO: make this a workflow
+def get_test_dataset(model_type):
     plates = files_in_folder(TEST_PATH)
 
-    test = []
+    X_images = []
+
+    for p in plates:
+        imgs = process_test_plate(p, model_type)
+        X_images.extend(imgs)
+
+    X_dataset = np.array(X_images)
+
+    # for c in X_dataset:
+    #     plt.imshow(c)
+    #     plt.show()
+
+    return X_dataset # Returning the raw partitions.
 
 
 # Prints info about datasets
@@ -164,4 +181,4 @@ def add_noise(img):
     return img
 
 if __name__ == '__main__':
-    get_test_dataset()
+    _, _ = get_test_dataset(1)
