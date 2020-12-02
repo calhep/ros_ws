@@ -11,6 +11,9 @@ import numpy as np
 import homography as hm
 import callback_handling as ch
 
+from tensorflow.compat.v1 import get_default_graph
+from tensorflow.python.keras import models
+from tensorflow.python.keras import backend
 from homography import Homography
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
@@ -101,7 +104,7 @@ class ImageConverter:
             elif x > 250:
                 self.rm.move_robot(x=0.05, z=-0.7)
             else:
-                self.rm.move_robot(x=0.1, z=0)
+                self.rm.move_robot(x=0.08, z=0)
 
 
 class RobotMovement:
@@ -160,12 +163,18 @@ def main(args):
     # TODO: We can consider moving and instantiating all classes in a higher level control class.
     # TODO: make sure that our code executes within the competition timing blocks.
 
+    sess = backend.get_session()
+    graph = get_default_graph()
+
     rm = RobotMovement()
     pr = PlateReader() 
 
     # Initialize the node.
     rospy.init_node('controller')
     init_rate = rospy.Rate(1)
+
+    model_l = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/letter_model')
+    model_n = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/number_model')
 
     # Begin the competition.
     init_rate.sleep()
@@ -175,7 +184,7 @@ def main(args):
     rospy.sleep(1)
     rm.init()
     ic = ImageConverter(rm)
-    hm = Homography(pr)
+    hm = Homography(pr,model_l,model_n)
     
     rospy.sleep(250)
 

@@ -21,11 +21,11 @@ graph = get_default_graph()
 
 class Homography():
 
-    def __init__(self, pr):
+    def __init__(self, pr, model_l, model_n):
         self.pr = pr
         self.model = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/car_model')
-        # self.model_l = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/letter_model')
-        # self.model_n = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/number_model')
+        self.model_l = model_l
+        self.model_n = model_n
 
         self.sift = cv2.xfeatures2d.SIFT_create()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
@@ -70,7 +70,7 @@ class Homography():
                 self.plate_num = self.plate_reference[str(pred_number)]
                 print(self.plate_num)
 
-                self.pr.publish_plate(pred_number, 'ABCD')
+                self.pr.publish_plate(pred_number, predicted_plate) # TODO: put predicted plate
 
 
     # Method for generating homography on an image
@@ -170,14 +170,46 @@ class Homography():
 
         return (res_max, index_pred + 1)
 
+
     # prediction for plate
     def plate_prediction(self, image):
-        img = self.process_plate(image)
-        img = np.expand_dims(img, axis=0)
+        letters, nums = self.process_plate(image)
 
-        # with graph.as_default():
-        #     backend.set_session(sess)
-        #     predicted_letter = 
+        # predict letters
+        l1 = np.expand_dims(letters[0],axis=0)
+        l2 = np.expand_dims(letters[1],axis=0)
+
+        with graph.as_default():
+            backend.set_session(sess)
+            pred_l1 = self.model_l.predict(l1)[0]
+            pred_l2 = self.model_l.predict(l2)[0]
+
+        i1 = np.argmax(pred_l1)
+        i2 = np.argmax(pred_l2)
+
+        char1 = self.index_to_val(i1)
+        char2 = self.index_to_val(i2)
+
+        pred_chars = [char1,char2]
+
+        # predict numbers
+        n1 = np.expand_dims(nums[0],axis=0)
+        n2 = np.expand_dims(nums[1],axis=0)
+
+        with graph.as_default():
+            backend.set_session(sess)
+            pred_n1 = self.model_n.predict(n1)[0]
+            pred_n2 = self.model_n.predict(n2)[0]
+
+        i3 = np.argmax(pred_n1)
+        i4 = np.argmax(pred_n2)
+
+        pred_chars.append(str(i3))
+        pred_chars.append(str(i4))
+
+        print(pred_chars)
+        return pred_chars
+
 
 
     def process_img(self, image):
@@ -187,28 +219,40 @@ class Homography():
 
         return img
 
+    def thresh_char(self, frame):
+        _, threshed = cv2.threshold(frame, 60, 255,cv2.THRESH_BINARY_INV)
+        res = threshed.reshape(150,105,1)
+        return res
+  
 
     def process_plate(self, image):
         print(image.shape)
 
-        cv2.imshow('whole',image)
-        cv2.waitKey(1)
+        sz = (105,150)
         
-        # letter1 = image[:,10:45]
-        # cv2.imshow('a',letter1)
-        # cv2.waitKey(1)
+        letter1 = self.thresh_char(cv2.resize(image[10:-15,10:45],sz))
+        letter2 = self.thresh_char(cv2.resize(image[10:-15,50:90],sz))
+    
+        num1 = self.thresh_char(cv2.resize(image[10:-15,130:175],sz))
+        num2 = self.thresh_char(cv2.resize(image[10:-15,170:215],sz))
 
-        letter2 = image[:,50:90]
+        cv2.imshow('a',letter1)
         cv2.imshow('b',letter2)
-        cv2.waitKey(1)
-
-        num1 = image[:,105:170]
         cv2.imshow('c',num1)
-        cv2.waitKey(1)
-
-        num2 = image[:,160:205]
         cv2.imshow('d',num2)
-        cv2.waitKey(1)
+
+        letters = [letter1, letter2]
+        nums = [num1, num2]
+
+        return letters, nums
+
+    
+    # Return an alphanumeric character from a given index
+    def index_to_val(self, i):
+        abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        return abc123[i]
+
+
     
         
 
