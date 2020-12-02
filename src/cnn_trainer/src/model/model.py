@@ -269,7 +269,7 @@ def predict_test_set(plate, model, model_type):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = True
+    TRAIN = False
     RESET_MODEL = False # BE CAREFUL WITH THIS.
     PREDICT = True
     AUGMENT = True
@@ -307,7 +307,7 @@ def main():
         # Predict a plate if specified
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
-            plate_to_test = plates[350]
+            plate_to_test = plates[700]
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 

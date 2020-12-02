@@ -171,8 +171,8 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=10,
-        batch_size=36,
+        steps_per_epoch=24,
+        batch_size=25,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
