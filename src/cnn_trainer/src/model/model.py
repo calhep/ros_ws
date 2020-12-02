@@ -249,7 +249,6 @@ def main():
         print("pick a model please.")
 
 
-
 if __name__ == '__main__':
     #main()
-    _,_ = util.get_training_dataset(0)
+    x,y = util.get_training_dataset(0)

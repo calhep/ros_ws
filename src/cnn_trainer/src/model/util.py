@@ -22,21 +22,23 @@ def files_in_folder(path):
 
 
 # Generate a one hot vector for a given character
-def one_hot(c):
-    vec = [0] * 36
-    try:
-        int(c)
-        index = int(c) + 26
-    except ValueError as e:
-        lowercase = c.lower()
-        index = LC.index(lowercase)
+def one_hot_letter(c):
+    vec = [0] * 26
+    lowercase = c.lower()
+    index = LC.index(lowercase)
     vec[index] = 1
     return vec
 
 
+# Generate a one hot vector for a given number 
+def one_hot_num(n):
+    vec = [0] * 8
+    vec(num) = 1
+    return vec
+
 # Return an alphanumeric character from a given index
 def index_to_val(i):
-    abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    abc123 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     
     return abc123[i]
 
@@ -59,12 +61,17 @@ def process_plate(my_file, model_type):
 
     vecs = []
     
-    for i in range(2):
-        vecs.append(one_hot(my_file[6+i]))
+    if model_type == 0:
+        for i in range(2):
+            vecs.append(one_hot_letter(my_file[6+i]))
+    else:
+        for i in range(2):
+            vecs.append(one_hot)
 
-    for c in imgs:
-        plt.imshow(c)
-        plt.show()
+    # for i,c in enumerate(imgs):
+    #     print(vecs[i])
+    #     plt.imshow(c)
+    #     plt.show()
 
     return imgs, vecs 
 
