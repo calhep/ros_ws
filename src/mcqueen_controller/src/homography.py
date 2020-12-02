@@ -56,7 +56,9 @@ class Homography():
             # plate_homography = self.run_homography(car_homography, False)
             # self.splice_homography(car_homography)
             processed_number = self.slice_number(car_homography)
-            procssed_plate = self.slice_plate(car_homography)
+            processed_plate = self.slice_plate(car_homography)
+
+            processed_plate = processed_plate.reshape(processed_plate.shape[0],processed_plate.shape[1],1)
 
             image_contours = self.get_image_contour(processed_plate)
 
@@ -133,7 +135,7 @@ class Homography():
 
         plate_slice = image[int(0.75*h):-1*int(0.05*h),int(0.2*w):-1*int(0.2*w)]
         # cv2.imshow('gyuh', plate_slice)
-        return
+        return plate_slice
     
     # Method for creating number slice
     def slice_number(self, image):
@@ -177,60 +179,60 @@ class Homography():
 
     # Image contouring
     def get_image_contour(self, image):
-        processed_plate = self.plate_processing(image)
-        cropped_characters = self.plate_contouring(processed_plate)
+        cropped_characters = self.plate_contouring(image)
 
-        return
-
-
-    # Code inspired by https://medium.com/@quangnhatnguyenle/detect-and-recognize-vehicles-license-plate-with-machine-learning-and-python-part-2-plate-de644de9849f
-    def plate_processing(self, image):
-        # Apply thresholding 
-        binary_thresh = cv2.threshold(image, 180, 255,
-                         cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-
-        ## Apply dilation 
-        morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        thresh_morph = cv2.morphologyEx(binary_thresh, cv2.MORPH_DILATE, morph_kernel)
-
-        return thresh_morph
+        return cropped_characters
 
 
-    # Code inspired by https://medium.com/@quangnhatnguyenle/detect-and-recognize-vehicles-license-plate-with-machine-learning-and-python-part-2-plate-de644de9849f
     def plate_contouring(self, image):
-        cont, _  = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        plate_image = cv2.convertScaleAbs(image, alpha=(255.0))
+        cv2.imshow('p',image)
+        cv2.waitKey(1)
 
-        # creat a copy version "test_roi" of plat_image to draw bounding box
-        test_roi = plate_image.copy()
+        # _, binary_thresh = cv2.threshold(plate_image, 5, 255,
+        #                  cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-        # Initialize a list which will be used to append charater image
-        crop_characters = []
+        # # Apply dilation 
+        # morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        # thresh_morph = cv2.morphologyEx(binary_thresh, cv2.MORPH_DILATE, morph_kernel)
 
-        # define standard width and height of character
-        digit_w, digit_h = 30, 60
-
-        for c in self.sort_contours(cont):
-            (x, y, w, h) = cv2.boundingRect(c)
-            ratio = h/w
-            if 1<=ratio<=3.5: # Only select contour with defined ratio
-                if h/plate_image.shape[0]>=0.5: # Select contour which has the height larger than 50% of the plate
-                    # Draw bounding box arroung digit number
-                    cv2.rectangle(test_roi, (x, y), (x + w, y + h), (0, 255,0), 2)
-
-                    # Sperate number and gibe prediction
-                    curr_num = thre_mor[y:y+h,x:x+w]
-                    curr_num = cv2.resize(curr_num, dsize=(digit_w, digit_h))
-                    _, curr_num = cv2.threshold(curr_num, 220, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                    crop_characters.append(curr_num)
+        # test,cont,test2 = cv2.findContours(binary_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        print("Detect {} letters...".format(len(crop_characters)))   
-        return crop_characters
+        # cv2.imshow('t',test)
+        # cv2.waitKey(1)
+
+        # # creat a copy version "test_roi" of plat_image to draw bounding box
+        # test_roi = plate_image.copy()
+
+        # # Initialize a list which will be used to append charater image
+        # crop_characters = []
+
+        # # define standard width and height of character
+        # digit_w, digit_h = 30, 60
+
+        # for c in self.sort_contours(cont):
+        #     (x, y, w, h) = cv2.boundingRect(c)
+        #     ratio = h/w
+        #     if 1<=ratio<=3.5: # Only select contour with defined ratio
+        #         if h/plate_image.shape[0]>=0.5: # Select contour which has the height larger than 50% of the plate
+        #             # Draw bounding box arroung digit number
+        #             cv2.rectangle(test_roi, (x, y), (x + w, y + h), (0, 255,0), 2)
+
+        #             # Sperate number and gibe prediction
+        #             curr_num = thresh_morph[y:y+h,x:x+w]
+        #             curr_num = cv2.resize(curr_num, dsize=(digit_w, digit_h))
+        #             _, curr_num = cv2.threshold(curr_num, 220, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        #             crop_characters.append(curr_num)
+        
+        # print("Detect {} letters...".format(len(crop_characters)))   
+        # return crop_characters
 
 
     # Code inspired by https://medium.com/@quangnhatnguyenle/detect-and-recognize-vehicles-license-plate-with-machine-learning-and-python-part-2-plate-de644de9849f    # Create sort_contours() function to grab the contour of each digit from left to right
-    def sort_contours(cnts,reverse = False):
+    def sort_contours(cnts,reverse=False):
         i = 0
 
+        print(type(cnts))
         boundingBoxes = [cv2.boundingRect(c) for c in cnts]
         (cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes),
                                             key=lambda b: b[1][i], reverse=reverse))
