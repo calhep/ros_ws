@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import random
 
 from matplotlib import pyplot as plt
 from tensorflow.python.keras import layers
@@ -8,6 +9,7 @@ from tensorflow.python.keras import optimizers
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.utils import plot_model
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from scipy.ndimage.filters import uniform_filter
 
 import util as util
 
@@ -68,6 +70,19 @@ def get_model(lr=1e-4, model_type=0, new=False):
     return model
 
 
+# Generate noise
+# https://stackoverflow.com/questions/43382045/keras-realtime-augmentation-adding-noise-and-contrast
+def add_noise(img):
+    VARIABILITY = 5
+    deviation = VARIABILITY*random.random()
+    noise = np.random.normal(0, deviation, img.shape)
+    img += noise
+
+    img = uniform_filter(img,size=(10,10,1))
+    np.clip(img, 0., 255.)
+    return img
+
+
 def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
 
     print(X_dataset.shape)
@@ -77,16 +92,18 @@ def train_model(model, X_dataset, Y_dataset, vs, epochs, augment=True):
         print("Augmenting data.")
 
         aug = ImageDataGenerator(
-            shear_range=0.65,
-            rotation_range=20,
-            zoom_range=0.12,
-            preprocessing_function=util.add_noise,
-            brightness_range=[0.15,1.1],
+            shear_range=1.5,
+            rotation_range=3,
+            zoom_range=[1,2.25],
+            width_shift_range=[-10,10],
+            height_shift_range=[-10,10],
+            preprocessing_function=add_noise,
+            brightness_range=[0.2,1.1],
             validation_split=vs
         )
 
         print("Visualizing IDG.")
-        #visualize_idg(aug, X_dataset)
+       # visualize_idg(aug, X_dataset)
 
         print("Creating augmented datasets.")
 
@@ -250,7 +267,7 @@ def predict_test_set(plate, model, model_type):
 def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
-    RESET_MODEL = False # BE CAREFUL WITH THIS.
+    RESET_MODEL = True # BE CAREFUL WITH THIS.
     PREDICT = True
     AUGMENT = True
 
@@ -261,11 +278,11 @@ def main():
     LEARNING_RATE = 1e-4
 
     # Letter model parameters.
-    EPOCHS_1 = 2
+    EPOCHS_1 = 20
     VS_1 = 0.2
 
     # Number model parameters.
-    EPOCHS_2 = 2
+    EPOCHS_2 = 20
     VS_2 = 0.2
 
     # Generate model or retrieve model
@@ -291,11 +308,11 @@ def main():
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
-            # Predict from test set
-            print("Testing from test set")
-            test_plates = util.files_in_folder(util.TEST_PATH)
-            for p in test_plates:
-                predict_test_set(p, model, MODEL_TYPE)
+            # # Predict from test set
+            # print("Testing from test set")
+            # test_plates = util.files_in_folder(util.TEST_PATH)
+            # for p in test_plates:
+            #     predict_test_set(p, model, MODEL_TYPE)
 
     elif MODEL_TYPE == 1: # This corresponds to the model for numbers
         if TRAIN:
@@ -322,11 +339,11 @@ def main():
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
-            # Predict from test set
-            print("Testing from test set")
-            test_plates = util.files_in_folder(util.TEST_PATH)
-            for p in test_plates:
-                predict_test_set(p, model, MODEL_TYPE)
+            # # Predict from test set
+            # print("Testing from test set")
+            # test_plates = util.files_in_folder(util.TEST_PATH)
+            # for p in test_plates:
+            #     predict_test_set(p, model, MODEL_TYPE)
 
 
     else: # ur an idiot
