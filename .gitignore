@@ -3,4 +3,5 @@ build/*
 devel/*
 src/cnn_trainer/src/model/keras/*
 src/cnn_trainer/media/plates/*
+src/cnn_trainer/media/parking/*
 .vscode/
