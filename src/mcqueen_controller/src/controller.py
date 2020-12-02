@@ -186,7 +186,7 @@ def main(args):
     ic = ImageConverter(rm)
     hm = Homography(pr,model_l,model_n)
     
-    rospy.sleep(250)
+    rospy.sleep(200)
 
     # Stop the robot and the competition.
     rm.stop_robot()

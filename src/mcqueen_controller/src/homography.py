@@ -48,11 +48,15 @@ class Homography():
 
         self.plate_reference = {'2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '1': 6, '7': 7, '8': 7}
         self.plate_num = 0
+        self.flag = False
     
     
     # Callback function for homography subscriber
     def callback(self, image):
         car_homography = self.run_homography(image, True)
+
+        if self.flag:
+            self.pr.stop_comp()
 
         if car_homography is not None:
             # plate_homography = self.run_homography(car_homography, False)
@@ -60,19 +64,32 @@ class Homography():
             processed_number = self.slice_number(car_homography)
             processed_plate = self.slice_plate(car_homography)
 
-            processed_plate = processed_plate.reshape(processed_plate.shape[0],processed_plate.shape[1],1)
-
-            predicted_plate = self.plate_prediction(processed_plate)
-
             max_pred, pred_number = self.generate_prediction(processed_number)
 
-            if max_pred > 0.95:
+            if max_pred > 0.97:
                 var = self.plate_num
+
+                if pred_number == 4 or pred_number == 5:
+                    dilate = True
+                    erode = False
+                elif pred_number == 6:
+                    erode = True
+                    dilate = False
+                else:
+                    erode = False
+                    dilate = False
                 
-                self.plate_num = self.plate_reference[str(pred_number)]
+                processed_plate = processed_plate.reshape(processed_plate.shape[0],processed_plate.shape[1],1)
+                predicted_plate = self.plate_prediction(processed_plate, dilate,erode)
+
+                if not self.flag:
+                    self.plate_num = self.plate_reference[str(pred_number)]
 
                 if var == 5 and not self.plate_num == 5:
-                    self.plate_num = 1
+                    self.plate_num = 6
+                    pred_number = 1
+                    self.flag = True
+                
 
                 print(self.plate_num)
                 
@@ -179,8 +196,8 @@ class Homography():
 
 
     # prediction for plate
-    def plate_prediction(self, image):
-        letters, nums = self.process_plate(image)
+    def plate_prediction(self, image,dilate=False,erode=False):
+        letters, nums = self.process_plate(image,dilate,erode)
 
         # predict letters
         l1 = np.expand_dims(letters[0],axis=0)
@@ -193,6 +210,10 @@ class Homography():
 
         i1 = np.argmax(pred_l1)
         i2 = np.argmax(pred_l2)
+
+        print("letter confidence")
+        print(pred_l1)
+        print(pred_l2)
 
         char1 = self.index_to_val(i1)
         char2 = self.index_to_val(i2)
@@ -211,6 +232,10 @@ class Homography():
         i3 = np.argmax(pred_n1)
         i4 = np.argmax(pred_n2)
 
+        print("number confidence")
+        print(pred_n1)
+        print(pred_n2)
+
         pred_chars = pred_chars + str(i3) + str(i4)
 
         print(pred_chars)
@@ -225,22 +250,31 @@ class Homography():
 
         return img
 
-    def thresh_char(self, frame):
+    def thresh_char(self, frame,dilate,erode):
         _, threshed = cv2.threshold(frame, 60, 255,cv2.THRESH_BINARY_INV)
+
+        if dilate:
+            kernel = np.ones((3,3),np.uint8)
+            threshed = cv2.dilate(threshed,kernel,iterations=1)
+
+        if erode:
+            kernel = np.ones((3,3),np.uint8)
+            threshed = cv2.erode(threshed,kernel,iterations=1)
+
         res = threshed.reshape(150,105,1)
         return res
   
 
-    def process_plate(self, image):
+    def process_plate(self, image,dilate,erode):
         print(image.shape)
 
         sz = (105,150)
         
-        letter1 = self.thresh_char(cv2.resize(image[10:-15,10:50],sz))
-        letter2 = self.thresh_char(cv2.resize(image[10:-15,50:100],sz))
+        letter1 = self.thresh_char(cv2.resize(image[10:-10,10:50],sz), dilate, erode)
+        letter2 = self.thresh_char(cv2.resize(image[10:-10,50:100],sz), dilate,erode)
     
-        num1 = self.thresh_char(cv2.resize(image[10:-15,130:180],sz))
-        num2 = self.thresh_char(cv2.resize(image[10:-15,172:218],sz))
+        num1 = self.thresh_char(cv2.resize(image[10:-10,130:175],sz),dilate,erode)
+        num2 = self.thresh_char(cv2.resize(image[10:-10,178:213],sz),dilate,erode)
 
         cv2.imshow('a',letter1)
         cv2.imshow('b',letter2)
