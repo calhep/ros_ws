@@ -23,7 +23,7 @@ class Homography():
 
     def __init__(self, pr):
         self.pr = pr
-        self.model = models.load_model('/home/fizzer/Desktop/car_model')
+        self.model = models.load_model('/home/fizzer/ros_ws/src/cnn_trainer/src/model/keras/car_model')
 
         self.sift = cv2.xfeatures2d.SIFT_create()
         self.image_sub = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=1, buff_size=1000000)
@@ -159,13 +159,13 @@ class Homography():
 
         index_pred = np.argmax(predicted_car)
 
-        res = [0] * 8
+        res = [0] * 6
         res[index_pred] = 1
 
         print("Predicted: ", index_pred + 1)
         print("Confidence: ", predicted_car)
 
-        res_max = np.amax(res)
+        res_max = np.amax(predicted_car)
 
         return (res_max, index_pred + 1)
 
