@@ -32,9 +32,12 @@ class ImageConverter:
         self.upper_blue = np.array([150,255,255])
 
         # pedestrian flags
+        self.avg_blue = 0
         self.crosswalk = False
-        self.pedestrian = False
         self.leaving = False
+        self.waiting = False
+
+        self.initial = False
 
     def callback(self, image):
         try:
@@ -43,64 +46,50 @@ class ImageConverter:
         except CvBridgeError as e:
             print(e)
 
-        frame = colored_img[385:440,530:730]
-        print(frame.shape)
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        blue_mask = cv2.inRange(hsv, self.lower_blue, self.upper_blue)
-
-        cv2.imshow('r',blue_mask)
-        cv2.waitKey(1)
-
-        cv2.imshow('a',frame)
-        cv2.waitKey(1)
-
-       
-        avg_blue = np.sum(blue_mask)
-        print(avg_blue)
-
-
         if not self.crosswalk and not self.leaving:
             self.crosswalk = ch.is_at_crosswalk(colored_img)
+            self.initial = True
 
-        # If the red bar of crosswalk is detected, check for pedestrian
-        else:
-            self.rm.stop_robot()
-
-            if avg_blue > 4 and not self.pedestrian: # We have just seen the pedestrian
-                self.pedestrian = True
-                self.leaving = True
-                self.rm.move_robot(z=-0.85)
-                rospy.sleep(0.5)
-                self.rm.stop_robot()
-                print("Pedestrain has been detected")
-
-            elif self.pedestrian and avg_blue <= 4:
-                self.pedestrian = False
-                self.leaving = True
-                print("No pedestrian, go")
-
-    
-
-        # x, y, self.prev_com = ch.generate_com(grayscale_img[:,800:], self.prev_com)
-        # # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
-        # # cv2.imshow('g',displayed_img)
-        # # cv2.waitKey(3)
-
-        # # Control conditions
-        # if not self.pedestrian:
-        #     if x < 220:
-        #         self.rm.move_robot(x=0.05, z=0.7)
-        #     elif x > 250:
-        #         self.rm.move_robot(x=0.05, z=-0.7)
-        #         self.leaving = False
-        #     else:
-        #         self.start_flag = True 
-        #         self.rm.move_robot(x=0.1, z=0)
-        # else:
-        #     print("Waiting.")
-        #     self.rm.stop_robot()
- 
+        if self.crosswalk or self.waiting:
+            frame = colored_img[400:460,540:740]
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            blue_mask = cv2.inRange(hsv, self.lower_blue, self.upper_blue)
+        
             
+            self.avg_blue = np.sum(blue_mask)
+            print(self.avg_blue)
+
+            if self.initial:
+                # keep waiting for blue
+                print("Waiting for pedestrian.")
+                if self.avg_blue > 0:
+                    self.initial = False
+            elif self.avg_blue > 0:
+                self.waiting = True
+            else:
+                self.waiting = False
+                self.leaving = True
+                self.initial = False
+
+
+
+        x, y, self.prev_com = ch.generate_com(grayscale_img[:,800:], self.prev_com)
+        # displayed_img = cv2.circle(grayscale_img, (x+750,y), 50, (255,0,0))
+        # cv2.imshow('g',displayed_img)
+        # cv2.waitKey(3)
+
+        # Control conditions
+        if not self.waiting:
+            if x < 220:
+                self.rm.move_robot(x=0.05, z=0.7)
+                self.leaving = False
+            elif x > 250:
+                self.rm.move_robot(x=0.05, z=-0.7)
+            else:
+                self.rm.move_robot(x=0.1, z=0)
+        elif self.waiting or self.initial:
+            print("Waiting.")
+            self.rm.stop_robot()
 
 
 class RobotMovement:
@@ -164,7 +153,7 @@ def main(args):
     
     # # start movin bruh
     rospy.sleep(1)
-    #rm.init()
+    rm.init()
     ic = ImageConverter(rm)
     #hm = Homography()
     
