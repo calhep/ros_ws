@@ -200,6 +200,9 @@ def main():
     PREDICT = True
     AUGMENT = True
 
+    # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
+    MODEL = 0
+
     # Constants
     LEARNING_RATE = 1e-4
 
@@ -210,19 +213,13 @@ def main():
     # Number model parameters.
     EPOCHS_2 = 5
     VS_2 = 0.2
-    
-    # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
-    MODEL = 0
 
     # Generate model or retrieve model
     model = get_model(lr=LEARNING_RATE, model_type=MODEL, new=RESET_MODEL)
-
-
-    # This corresponds to the model for plates
-    if LETTER_MODEL:
-        # If specified, train the model against training/validation data, always train if it's a new model.
-        if TRAIN or NEW_MODEL:
-            X_dataset, Y_dataset = util.get_training_dataset() 
+    
+    if MODEL == 0: # This corresponds to the model for plates
+        if TRAIN:
+            X_dataset, Y_dataset = util.get_training_dataset(MODEL) 
 
             model = train_model(model,
                 X_dataset,
@@ -246,9 +243,13 @@ def main():
             for p in test_plates:
                 predict_test_set(p, model)
 
-    elif NUMBER_MODEL:
+    elif MODEL == 1: # This corresponds to the model for numbers
+        return
+    else:
+        print("pick a model please.")
 
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    _,_ = util.get_training_dataset(0)

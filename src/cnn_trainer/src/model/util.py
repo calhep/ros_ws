@@ -41,8 +41,8 @@ def index_to_val(i):
     return abc123[i]
 
 
-# Return the 4 partitions of a plate image and their associated one hot vectors
-def process_plate(my_file):
+# Return either 2 partitions of a plate image and their associated one hot vectors
+def process_plate(my_file, model_type):
     plate_path = os.path.join(PLATE_DIR, my_file)
     plate_img = cv2.imread(plate_path)
     
@@ -51,28 +51,33 @@ def process_plate(my_file):
     img2 = plate_img[49:349,145:250]
     img3 = plate_img[49:349,347:452]
     img4 = plate_img[49:349,447:552]
-    imgs = [img1,img2,img3,img4]
+
+    if model_type == 0:
+        imgs = [img1,img2]
+    else:
+        imgs = [img3,img4]
 
     vecs = []
-    for i in range(4):
+    
+    for i in range(2):
         vecs.append(one_hot(my_file[6+i]))
 
-    # for c in imgs:
-    #     plt.imshow(c)
-    #     plt.show()
+    for c in imgs:
+        plt.imshow(c)
+        plt.show()
 
     return imgs, vecs 
 
 
 # Training datasets associated with the processed plates and their one-hot vectors
-def get_training_dataset():
+def get_training_dataset(model_type):
     plates = files_in_folder(PLATE_DIR)
 
     X_images = []
     Y_labels = []
 
     for p in plates:
-        imgs, vecs = process_plate(p)
+        imgs, vecs = process_plate(p, model_type)
         X_images.extend(imgs)
         Y_labels.extend(vecs)
 
