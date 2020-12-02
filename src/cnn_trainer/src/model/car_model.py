@@ -134,31 +134,45 @@ def add_noise(img):
     return img
 
 
+def visualize_idg(aug, X_dataset):
+    for data in X_dataset:
+        sample = np.expand_dims(data,0)
+        it = aug.flow(sample, batch_size=1)
+        
+        # generate batch
+        batch = it.next()
+
+        # convert to uint8
+        image = batch[0].astype('uint8')
+        cv2.imshow('a',image)
+        cv2.waitKey(0)
+
+
 # Predict car
 def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     # print(X_dataset.shape)
     # print(Y_dataset.shape)
     
     aug = ImageDataGenerator(
-        # shear_range=5,
+        shear_range=2,
         # rotation_range=5,
-        zoom_range=[1,3],
+        zoom_range=[1,3.5],
         width_shift_range=[-30,30],
         height_shift_range=[-20,20],
         preprocessing_function=add_noise,
-        brightness_range=(0.4,1.3),
+        brightness_range=(0.3,1.3),
         validation_split=vs
     )
 
     print("Visualizing IDG.")
-    #m.visualize_idg(aug, X_dataset) # VIS
+    #visualize_idg(aug, X_dataset) # VIS
 
     training_dataset = aug.flow(X_dataset, Y_dataset, subset='training')
     validation_dataset = aug.flow(X_dataset, Y_dataset, subset='validation')
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=36,
+        steps_per_epoch=105,
         batch_size=4,
         epochs=epochs,
         verbose=1,
@@ -187,21 +201,6 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     return model
 
 
-# Visualize the output from the ImageDataGenerator. This can probably be 
-def visualize_idg(aug, X_dataset):
-    for data in X_dataset:
-        sample = np.expand_dims(data,0)
-        it = aug.flow(sample, batch_size=1)
-        
-        # generate batch
-        batch = it.next()
-
-        # convert to uint8
-        image = batch[0].astype('uint8')
-        plt.imshow(image)
-        plt.show()
-
-
 # predict the car
 def predict_car(model, car):
     # pic = process_car_pic(file)
@@ -218,15 +217,20 @@ def predict_car(model, car):
 
 
 def main():
-    NEW_MODEL = False
-    TRAIN = False
+    NEW_MODEL = True
+    TRAIN = True
 
-    EPOCHS = 25
-    VS = 0.3
+    EPOCHS = 30
+    VS = 0.2
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
     Y_dataset = np.array(vecs)
+    print(len(X_dataset))
+
+    # for x in X_dataset:
+    #     cv2.imshow('x',x)
+    #     cv2.waitKey(0)
 
     print("Total examples: {}\nTraining examples: {}\nTest examples: {}".
       format(X_dataset.shape[0],
@@ -239,7 +243,7 @@ def main():
 
     if TRAIN:
         model = train_car_model(model,
-            X_dataset / 255,
+            X_dataset,
             Y_dataset,
             VS,
             EPOCHS,
