@@ -169,6 +169,7 @@ class Homography():
 
     def process_img(self, image):
         img = cv2.resize(image, (100,130))
+        _, img = cv2.threshold(img, 60, 255, cv2.THRESH_BINARY_INV)
         img = img.reshape(img.shape[0], img.shape[1], 1)
 
         return img
