@@ -21,11 +21,11 @@ PARKING_PATH = os.path.join(PATH,'media','parking')
 my_path = PARKING_PATH
 
 
-for i in range(0, 15):
+for i in range(0, 40):
 
     # number to write to parking identifier
     #id = randint(1,8)
-    id = 6
+    id = 5
 
     # Pick two random letters
     plate_alpha = ""

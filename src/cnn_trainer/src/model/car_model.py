@@ -50,7 +50,7 @@ def process_car_pic(my_file):
     img = cv2.imread(pic_path, cv2.IMREAD_GRAYSCALE)
     img_resized = cv2.resize(img,(200,600))
     img_resized = img_resized[235:365,100:] # 130, 100
-    # plt.imshow(img)
+    # plt.imshow(img_resized)
     # plt.show()
     res = img_resized.reshape(130,100,1)
 
@@ -91,6 +91,10 @@ def generate_car_model(lr):
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(130, 100, 1)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
@@ -154,25 +158,25 @@ def train_car_model(model, X_dataset, Y_dataset, vs, epochs):
     
     aug = ImageDataGenerator(
         shear_range=2,
-        # rotation_range=5,
+        rotation_range=5,
         zoom_range=[1,3.5],
-        width_shift_range=[-30,30],
-        height_shift_range=[-20,20],
+        # width_shift_range=[-30,30],
+        # height_shift_range=[-20,20],
         preprocessing_function=add_noise,
         brightness_range=(0.3,1.3),
         validation_split=vs
     )
 
     print("Visualizing IDG.")
-    #visualize_idg(aug, X_dataset) # VIS
+    # visualize_idg(aug, X_dataset) # VIS
 
     training_dataset = aug.flow(X_dataset, Y_dataset, subset='training')
     validation_dataset = aug.flow(X_dataset, Y_dataset, subset='validation')
 
     history_conv = model.fit(
         training_dataset,
-        steps_per_epoch=10,
-        batch_size=36,
+        steps_per_epoch=30,
+        batch_size=32,
         epochs=epochs,
         verbose=1,
         validation_data=validation_dataset
@@ -219,8 +223,8 @@ def main():
     NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 100
-    VS = 0.30
+    EPOCHS = 20
+    VS = 0.3
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
