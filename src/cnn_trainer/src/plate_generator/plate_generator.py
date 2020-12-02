@@ -18,10 +18,10 @@ TEST_DATA_DIR = os.path.join(PATH, 'media','test_set')
 PARKING_PATH = os.path.join(PATH,'media','parking')
 
 # Choose directory to write to:
-my_path = PARKING_PATH
+my_path = PLATE_PATH
 
 
-for i in range(0, 55):
+for i in range(0, 50):
 
     # number to write to parking identifier
     id = randint(1,6)
@@ -33,7 +33,8 @@ for i in range(0, 55):
         plate_alpha += (random.choice(string.ascii_uppercase))
 
     # Pick two random numbers
-    num = randint(0, 99)
+    num = 80
+    #num = randint(0, 99)
     plate_num = "{:02d}".format(num)
 
     # Write plate to image
@@ -42,8 +43,6 @@ for i in range(0, 55):
 
     # Convert into a PIL image (this is so we can use the monospaced fonts)
     blank_plate_pil = Image.fromarray(blank_plate)
-
-
 
     # Create parking spot label
     s = "P" + str(id)

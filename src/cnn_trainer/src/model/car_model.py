@@ -40,7 +40,7 @@ def process_test_pic(my_file):
     # plt.imshow(res)
     # plt.show()
     # res = res.reshape(190,150,1)
-    _, img = cv2.threshold(img_resized, 60, 255, cv2.THRESH_BINARY_INV) 
+    _, img = cv2.threshold(img, 60, 255, cv2.THRESH_BINARY_INV) 
     img = img.reshape(img.shape[0], img.shape[1], 1)
     return img
 
@@ -93,6 +93,10 @@ def generate_car_model(lr):
     model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(130, 100, 1)))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))

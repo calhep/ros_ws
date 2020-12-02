@@ -269,13 +269,13 @@ def predict_test_set(plate, model, model_type):
 
 def main():
     # PARAMETERS TO ADJUST
-    TRAIN = False
+    TRAIN = True
     RESET_MODEL = False # BE CAREFUL WITH THIS.
     PREDICT = True
     AUGMENT = True
 
     # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
-    MODEL_TYPE = 0
+    MODEL_TYPE = 1
 
     # Constants
     LEARNING_RATE = 1e-4
@@ -285,7 +285,7 @@ def main():
     VS_1 = 0.2
 
     # Number model parameters.
-    EPOCHS_2 = 15
+    EPOCHS_2 = 10
     VS_2 = 0.2
 
     # Generate model or retrieve model
@@ -307,15 +307,15 @@ def main():
         # Predict a plate if specified
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
-            plate_to_test = plates[700]
+            plate_to_test = plates[10]
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
-            # Predict from test set
-            print("Testing from test set")
-            test_plates = util.files_in_folder(util.TEST_PATH)
-            for p in test_plates:
-                predict_test_set(p, model, MODEL_TYPE)
+            # # Predict from test set
+            # print("Testing from test set")
+            # test_plates = util.files_in_folder(util.TEST_PATH)
+            # for p in test_plates:
+            #     predict_test_set(p, model, MODEL_TYPE)
 
     elif MODEL_TYPE == 1: # This corresponds to the model for numbers
         if TRAIN:
@@ -338,15 +338,15 @@ def main():
 
         if PREDICT:
             plates = util.files_in_folder(util.PLATE_DIR)
-            plate_to_test = plates[11]
+            plate_to_test = plates[150]
             print("Testing ", plate_to_test)
             predict_plate(plate_to_test, model, MODEL_TYPE)
 
-            # Predict from test set
-            print("Testing from test set")
-            test_plates = util.files_in_folder(util.TEST_PATH)
-            for p in test_plates:
-                predict_test_set(p, model, MODEL_TYPE)
+            # # Predict from test set
+            # print("Testing from test set")
+            # test_plates = util.files_in_folder(util.TEST_PATH)
+            # for p in test_plates:
+            #     predict_test_set(p, model, MODEL_TYPE)
 
 
     else: # ur an idiot
