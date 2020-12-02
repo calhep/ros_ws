@@ -77,15 +77,8 @@ class Homography():
 
             min_matches = MIN_CAR_MATCHES
 
-<<<<<<< HEAD
             cv2.imshow('reference_image', reference_image)
             cv2.waitKey(3)
-=======
-            # cv2.imshow('reference_image', reference_image)
-            # cv2.imshow('grayframe', grayframe)
-            # cv2.waitKey(3)
-
->>>>>>> main
         else:
             reference_image = self.plate_templates[self.plate_num]
             kp_image, desc_image = self.kp_desc_plates[self.plate_num]
@@ -139,17 +132,11 @@ class Homography():
     def slice_number(self, image):
         h, w = image.shape
 
-<<<<<<< HEAD
         number_slice = image[int(0.25*h):-1*int(0.25*h),int(0.5*w):-1*int(0.2*w)]
         cv2.imshow('gyuh', number_slice)
         cv2.imwrite('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/slice_p{}.jpg'.format(self.plate_num), number_slice)
         
         return number_slice
-=======
-        number_slice = image[int(0.3*h):-1*int(0.3*h),int(0.2*w):-1*int(0.2*w)]
-        # cv2.imshow('gyuh', number_slice)
-        return
->>>>>>> main
 
     # Image contouring
     def image_contour(self, image):
