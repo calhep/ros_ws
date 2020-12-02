@@ -24,7 +24,7 @@ TEST_PATH = os.path.join(PATH, 'media', 'test_set')
 
 # one hot vector
 def car_one_hot(num):
-    vecs = [0] * 8
+    vecs = [0] * 6
     vecs[num-1] = 1
     return vecs
 
@@ -95,7 +95,7 @@ def generate_car_model(lr):
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(512, activation='relu'))
-    model.add(layers.Dense(8, activation='softmax'))
+    model.add(layers.Dense(6, activation='softmax'))
 
     # Set Learning Rate and Compile Model
     model.compile(loss='categorical_crossentropy',
@@ -208,7 +208,7 @@ def predict_car(model, car):
     predicted_car = model.predict(image)[0]
     index_pred = np.argmax(predicted_car)
 
-    res = [0] * 8
+    res = [0] * 6
     res[index_pred] = 1
     print("Predicted: ", index_pred+1)
     print("Confidence: ", predicted_car)
@@ -219,8 +219,8 @@ def main():
     NEW_MODEL = True
     TRAIN = True
 
-    EPOCHS = 100
-    VS = 0.30
+    EPOCHS = 30
+    VS = 0.35
 
     imgs, vecs = get_car_datasets()
     X_dataset = np.array(imgs)
@@ -264,7 +264,7 @@ def main():
     tests = util.files_in_folder('/home/fizzer/ros_ws/src/mcqueen_controller/src/Homography_Matches/Sliced_Numbers/')
     for t in tests:
         my_test = process_test_pic(t)
-        print('actual: ', t[7:8])
+        print('actual: ', t[5:6])
         cv2.imshow('g', my_test)
         cv2.waitKey(3)
         predict_car(model, my_test)

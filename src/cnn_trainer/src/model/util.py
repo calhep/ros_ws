@@ -181,4 +181,8 @@ def add_noise(img):
     return img
 
 if __name__ == '__main__':
-    _, _ = get_test_dataset(1)
+    x= get_test_dataset(1)
+
+    for item in x:
+        cv2.imshow('i', item)
+        cv2.waitKey(0)

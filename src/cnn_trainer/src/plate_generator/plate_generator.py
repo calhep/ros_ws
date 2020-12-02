@@ -18,10 +18,10 @@ TEST_DATA_DIR = os.path.join(PATH, 'media','test_set')
 PARKING_PATH = os.path.join(PATH,'media','parking')
 
 # Choose directory to write to:
-my_path = PLATE_PATH
+my_path = PARKING_PATH
 
 
-for i in range(0, 15):
+for i in range(0, 100):
 
     # number to write to parking identifier
     #id = randint(1,8)
