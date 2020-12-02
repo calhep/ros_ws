@@ -126,10 +126,9 @@ def process_homographic_plate(my_file, model_type):
     else:
         imgs = [img3,img4]
 
-
-    for img in imgs:
-        plt.imshow(img)
-        plt.show()
+    # for img in imgs:
+    #     plt.imshow(img)
+    #     plt.show()
 
     return imgs
 

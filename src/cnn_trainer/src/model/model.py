@@ -158,8 +158,8 @@ def predict_plate(plate, model, model_type):
 
     if model_type == 0:
         for i in range(2):
-            plt.imshow(dataset[i])
-            plt.show()
+            # plt.imshow(dataset[i])
+            # plt.show()
 
             image = np.expand_dims(dataset[i], axis=0)
 
@@ -169,7 +169,8 @@ def predict_plate(plate, model, model_type):
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
 
-            print("Confidence for: ",util.index_to_val(index_true), y_predicted)
+            print("Confidence for: ", util.index_to_val(index_true))
+            print(y_predicted)
 
             true.append(util.index_to_val(index_true))
             chars.append(util.index_to_val(index_predicted))
@@ -179,8 +180,8 @@ def predict_plate(plate, model, model_type):
 
     if model_type == 1:
         for i in range(2):
-            plt.imshow(dataset[i])
-            plt.show()
+            # plt.imshow(dataset[i])
+            # plt.show()
 
             image = np.expand_dims(dataset[i], axis=0)
 
@@ -190,7 +191,8 @@ def predict_plate(plate, model, model_type):
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
 
-            print("Confidence for: ",index_true, y_predicted)
+            print("Confidence for: ", index_true)
+            print(y_predicted)
 
             true.append(index_true)
             chars.append(index_predicted)
@@ -216,8 +218,9 @@ def predict_test_set(plate, model, model_type):
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
 
-            print("Confidence \n")
+            print("Confidence")
             print(y_predicted)
+            print("\n")
 
             chars.append(util.index_to_val(index_predicted))
 
@@ -234,8 +237,9 @@ def predict_test_set(plate, model, model_type):
             y_predicted = model.predict(image)[0]
             index_predicted = np.argmax(y_predicted)
 
-            print("Confidence \n")
+            print("Confidence")
             print(y_predicted)
+            print("\n")
             
             chars.append(index_predicted)
 
@@ -246,14 +250,12 @@ def predict_test_set(plate, model, model_type):
 def main():
     # PARAMETERS TO ADJUST
     TRAIN = True
-    RESET_MODEL = True # BE CAREFUL WITH THIS.
-
-    # PREDICT // AUGMENT?
+    RESET_MODEL = False # BE CAREFUL WITH THIS.
     PREDICT = True
     AUGMENT = True
 
     # 0 for LETTER_MODEL, 1 for NUMBER_MODEL
-    MODEL_TYPE = 1
+    MODEL_TYPE = 0
 
     # Constants
     LEARNING_RATE = 1e-4
